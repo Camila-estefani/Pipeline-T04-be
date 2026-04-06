@@ -62,8 +62,8 @@ public class CustomerRest {
         return customerService.save(customer);
     }
 
-    // 🌐✏️ Mapear Endpoint Actualizar - tipo PUT en POSTMAN
-    @PutMapping("/update/{id}")
+    // 🌐✏️ Mapear Endpoint Actualizar (Edición Parcial) - tipo PATCH en POSTMAN
+    @PatchMapping("/update/{id}")
     @Operation(summary = "Update Customer", description = "Update Customer")
     public Customer update(@PathVariable Integer id, @RequestBody Customer customer) {
         return customerService.update(id, customer);
@@ -76,8 +76,8 @@ public class CustomerRest {
         return customerService.delete(id);
     }
 
-    // 🌐♻️ Mapear Endpoint Restaurar (Cambio de Estado) por ID - tipo PATCH en POSTMAN
-    @PatchMapping("/restore/{id}")
+    // 🌐♻️ Mapear Endpoint Restaurar (Cambio de Estado) por ID - tipo POST en POSTMAN
+    @PostMapping("/restore/{id}")
     @Operation(summary = "Logical Restore Customer", description = "Logical Restore Customer")
     public Customer restore(@PathVariable Integer id) {
         return customerService.restore(id);

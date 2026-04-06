@@ -62,8 +62,8 @@ public class ProviderRest {
         return providerService.save(provider);
     }
 
-    // 🌐✏️ Mapear Endpoint Actualizar - tipo PUT en POSTMAN
-    @PutMapping("/update/{id}")
+    // 🌐✏️ Mapear Endpoint Actualizar (Edición Parcial) - tipo PATCH en POSTMAN
+    @PatchMapping("/update/{id}")
     @Operation(summary = "Update Provider", description = "Update Provider")
     public Provider update(@PathVariable Integer id, @RequestBody Provider provider) {
         return providerService.update(id, provider);
@@ -76,8 +76,8 @@ public class ProviderRest {
         return providerService.delete(id);
     }
 
-    // 🌐♻️ Mapear Endpoint Restaurar (Cambio de Estado) por ID - tipo PATCH en POSTMAN
-    @PatchMapping("/restore/{id}")
+    // 🌐♻️ Mapear Endpoint Restaurar (Cambio de Estado) por ID - tipo POST en POSTMAN
+    @PostMapping("/restore/{id}")
     @Operation(summary = "Logical Restore Provider", description = "Logical Restore Provider")
     public Provider restore(@PathVariable Integer id) {
         return providerService.restore(id);

@@ -60,8 +60,8 @@ public class ProductRest {
         return productService.save(product);
     }
 
-    // 🌐✏️ Mapear Endpoint Actualizar - tipo PUT en POSTMAN
-    @PutMapping("/update/{id}")
+    // 🌐✏️ Mapear Endpoint Actualizar (Edición Parcial) - tipo PATCH en POSTMAN
+    @PatchMapping("/update/{id}")
     @Operation(summary = "Update Product", description = "Update Product")
     public Product update(@PathVariable Integer id, @RequestBody Product product) {
         return productService.update(id, product);
@@ -74,8 +74,8 @@ public class ProductRest {
         return productService.delete(id);
     }
 
-    // 🌐♻️ Mapear Endpoint Restaurar (Cambio de Estado) por ID - tipo PATCH en POSTMAN
-    @PatchMapping("/restore/{id}")
+    // 🌐♻️ Mapear Endpoint Restaurar (Cambio de Estado) por ID - tipo POST en POSTMAN
+    @PostMapping("/restore/{id}")
     @Operation(summary = "Logical Restore Product", description = "Logical Restore Product")
     public Product restore(@PathVariable Integer id) {
         return productService.restore(id);
