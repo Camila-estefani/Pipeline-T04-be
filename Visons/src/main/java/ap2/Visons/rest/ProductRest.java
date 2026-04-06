@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*")          // ✅ Permitir Conexión con Angular
 @RestController
 @RequestMapping("/v1/api/product")
 @Tag(name = "Product API", description = "API for Product management")

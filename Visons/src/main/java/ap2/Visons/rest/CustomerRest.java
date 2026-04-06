@@ -20,7 +20,6 @@ import ap2.Visons.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-@CrossOrigin(origins = "*")          // ✅ Permitir Conexión con Angular
 @RestController
 @RequestMapping("/v1/api/customer")
 @Tag(name = "Customer API", description = "API for Customer management")

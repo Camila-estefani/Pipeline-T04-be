@@ -20,7 +20,6 @@ import ap2.Visons.service.ProviderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-@CrossOrigin(origins = "*")          // ✅ Permitir Conexión con Angular
 @RestController
 @RequestMapping("/v1/api/provider")
 @Tag(name = "Provider API", description = "API for Provider management")
