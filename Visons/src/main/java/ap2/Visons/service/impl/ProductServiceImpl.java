@@ -22,11 +22,11 @@ public class ProductServiceImpl implements ProductService {
         this.productRepository = productRepository;
     }
 
-    // 🛠️🔍 Implementación del método Listar Todos
+    // 🛠️🔍 Implementación del método Listar Todos (Solo Activos)
     @Override
     public List<Product> findAll() {
-        log.info("Listando todos los productos");
-        return productRepository.findAll();
+        log.info("Listando productos activos");
+        return productRepository.findByIsActive(true);
     }
 
     // 🛠️🔍 Implementación del método Listar por Estado
@@ -69,10 +69,10 @@ public class ProductServiceImpl implements ProductService {
     public Product update(Integer id, Product productDetails) {
         log.info("Actualizando producto con ID: {}", id);
         Optional<Product> existingProduct = productRepository.findById(id);
-        
+
         if (existingProduct.isPresent()) {
             Product product = existingProduct.get();
-            
+
             if (productDetails.getCategoryId() != null) {
                 product.setCategoryId(productDetails.getCategoryId());
             }
@@ -95,7 +95,7 @@ public class ProductServiceImpl implements ProductService {
                 product.setIsOwnProduction(productDetails.getIsOwnProduction());
             }
             product.setUpdatedAt(LocalDateTime.now());
-            
+
             return productRepository.save(product);
         } else {
             log.warn("Producto con ID {} no encontrado", id);
@@ -108,7 +108,7 @@ public class ProductServiceImpl implements ProductService {
     public Product delete(Integer id) {
         log.info("Eliminando producto con ID: {}", id);
         Optional<Product> existingProduct = productRepository.findById(id);
-        
+
         if (existingProduct.isPresent()) {
             Product product = existingProduct.get();
             product.setIsActive(false);
@@ -125,7 +125,7 @@ public class ProductServiceImpl implements ProductService {
     public Product restore(Integer id) {
         log.info("Restaurando producto con ID: {}", id);
         Optional<Product> existingProduct = productRepository.findById(id);
-        
+
         if (existingProduct.isPresent()) {
             Product product = existingProduct.get();
             product.setIsActive(true);

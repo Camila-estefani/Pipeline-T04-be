@@ -21,11 +21,11 @@ public class ProviderServiceImpl implements ProviderService {
         this.providerRepository = providerRepository;
     }
 
-    // 🛠️🔍 Implementación del método Listar Todos
+    // 🛠️🔍 Implementación del método Listar Todos (Solo Activos)
     @Override
     public List<Provider> findAll() {
-        log.info("Listando proveedores");
-        return providerRepository.findAll();
+        log.info("Listando proveedores activos");
+        return providerRepository.findByIsActive(true);
     }
 
     // 🛠️🔍 Implementación del método Listar por Estado

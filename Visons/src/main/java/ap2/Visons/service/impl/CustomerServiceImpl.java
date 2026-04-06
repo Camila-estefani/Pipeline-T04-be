@@ -23,11 +23,11 @@ public class CustomerServiceImpl implements CustomerService {
         this.customerRepository = customerRepository;
     }
 
-    // 🛠️🔍 Implementación del método Listar Todos
+    // 🛠️🔍 Implementación del método Listar Todos (Solo Activos)
     @Override
     public List<Customer> findAll() {
-        log.info("Listando todos los clientes");
-        return customerRepository.findAll();
+        log.info("Listando clientes activos");
+        return customerRepository.findByIsActive(true);
     }
 
     // 🛠️🔍 Implementación del método Listar por Estado
@@ -58,10 +58,10 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer update(Integer id, Customer customerDetails) {
         log.info("Actualizando cliente con ID: {}", id);
         Optional<Customer> existingCustomer = customerRepository.findById(id);
-        
+
         if (existingCustomer.isPresent()) {
             Customer customer = existingCustomer.get();
-            
+
             if (customerDetails.getCompanyName() != null) {
                 customer.setCompanyName(customerDetails.getCompanyName());
             }
@@ -80,7 +80,7 @@ public class CustomerServiceImpl implements CustomerService {
             if (customerDetails.getCreditLimit() != null) {
                 customer.setCreditLimit(customerDetails.getCreditLimit());
             }
-            
+
             return customerRepository.save(customer);
         } else {
             log.warn("Cliente con ID {} no encontrado", id);
@@ -93,7 +93,7 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer delete(Integer id) {
         log.info("Eliminando cliente con ID: {}", id);
         Optional<Customer> existingCustomer = customerRepository.findById(id);
-        
+
         if (existingCustomer.isPresent()) {
             Customer customer = existingCustomer.get();
             customer.setIsActive(false);
@@ -109,7 +109,7 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer restore(Integer id) {
         log.info("Restaurando cliente con ID: {}", id);
         Optional<Customer> existingCustomer = customerRepository.findById(id);
-        
+
         if (existingCustomer.isPresent()) {
             Customer customer = existingCustomer.get();
             customer.setIsActive(true);

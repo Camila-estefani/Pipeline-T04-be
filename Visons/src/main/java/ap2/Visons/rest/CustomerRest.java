@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,11 +33,11 @@ public class CustomerRest {
     public CustomerRest(CustomerService customerService) {
         this.customerService = customerService;
     }
-    
+
     // 🌐🔍 Mapear Endpoint Listar Todos - tipo GET en POSTMAN
     @GetMapping({"/", ""})
     @Operation(summary = "Get All Customers", description = "Get All Customers")
-    public List<Customer> findAll(){
+    public List<Customer> findAll() {
         return customerService.findAll();
     }
 
@@ -68,8 +69,8 @@ public class CustomerRest {
         return customerService.update(id, customer);
     }
 
-    // 🌐❌ Mapear Endpoint Eliminar (Cambio de Estado) por ID - tipo PATCH en POSTMAN
-    @PatchMapping("/delete/{id}")
+    // 🌐❌ Mapear Endpoint Eliminar (Cambio de Estado) por ID - tipo DELETE en POSTMAN
+    @DeleteMapping("/{id}")
     @Operation(summary = "Logical Delete Customer", description = "Logical Delete Customer")
     public Customer delete(@PathVariable Integer id) {
         return customerService.delete(id);

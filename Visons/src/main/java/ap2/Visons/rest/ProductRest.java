@@ -4,6 +4,7 @@ import ap2.Visons.model.Product;
 import ap2.Visons.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,11 +31,11 @@ public class ProductRest {
     public ProductRest(ProductService productService) {
         this.productService = productService;
     }
-    
+
     // 🌐🔍 Mapear Endpoint Listar Todos - tipo GET en POSTMAN
     @GetMapping({"/", ""})
     @Operation(summary = "Get All Products", description = "Get All Products")
-    public List<Product> findAll(){
+    public List<Product> findAll() {
         return productService.findAll();
     }
 
@@ -66,8 +67,8 @@ public class ProductRest {
         return productService.update(id, product);
     }
 
-    // 🌐❌ Mapear Endpoint Eliminar (Cambio de Estado) por ID - tipo PATCH en POSTMAN
-    @PatchMapping("/delete/{id}")
+    // 🌐❌ Mapear Endpoint Eliminar (Cambio de Estado) por ID - tipo DELETE en POSTMAN
+    @DeleteMapping("/{id}")
     @Operation(summary = "Logical Delete Product", description = "Logical Delete Product")
     public Product delete(@PathVariable Integer id) {
         return productService.delete(id);
