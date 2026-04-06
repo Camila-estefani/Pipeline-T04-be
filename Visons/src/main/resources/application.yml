@@ -5,14 +5,15 @@ server:
 spring:
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=Visons;encrypt=true;trustServerCertificate=true
-    username: sa          ## Cambiar por tu usuario
-    password: Admin12345!  ## Cambiar por tu contraseña
+    username: sa
+    password: Admin12345!
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
   jpa:
     database-platform: org.hibernate.dialect.SQLServerDialect
     hibernate:
-      ddl-auto: update  # Puede ser 'create', 'update', 'validate' o 'none'
-    show-sql: false  # Puede true o false, para ver las consultas SQL en consola
+      ddl-auto: update
+    show-sql: false
 
 springdoc:
   api-docs:
