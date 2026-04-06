@@ -1,23 +1,24 @@
 package ap2.Visons.service;
 
-import ap2.Visons.model.Product;
 import java.util.List;
 import java.util.Optional;
 
+import ap2.Visons.model.Customer;
+
 public interface CustomerService {
 
-    List<Product> findAll();
+    List<Customer> findAll();
 
-    List<Product> findByState(String state);
+    List<Customer> findByState(String state);
 
-    Optional<Product> findById(Integer id);
+    Optional<Customer> findById(Integer id);
 
-    Product save(Product product);
+    Customer save(Customer customer);
 
-    Product update(Integer id, Product product);
+    Customer update(Integer id, Customer customer);
 
-    Product delete(Integer id);
+    Customer delete(Integer id);
 
-    Product restore(Integer id);
+    Customer restore(Integer id);
     
 }

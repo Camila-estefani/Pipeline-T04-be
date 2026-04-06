@@ -4,9 +4,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=Visons;encrypt=true;trustServerCertificate=true
-    username: sa
-    password: Admin12345!
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=Visons;encrypt=true;trustServerCertificate=true}
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:Admin12345!}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:

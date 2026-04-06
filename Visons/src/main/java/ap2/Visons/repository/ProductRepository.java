@@ -5,11 +5,11 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import ap2.Visons.model.Customer;
+import ap2.Visons.model.Product;
 
 @Repository
-public interface CustomerRepository extends JpaRepository<Customer, Integer> {
+public interface ProductRepository extends JpaRepository<Product, Integer> {
 
-    List<Customer> findByIsActive(Boolean isActive);
+    List<Product> findByIsActive(Boolean isActive);
     
 }

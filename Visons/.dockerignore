@@ -1,0 +1,55 @@
+# Build artifacts
+target/
+*.jar
+*.war
+*.ear
+build/
+dist/
+*.class
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.iml
+.classpath
+.project
+.settings/
+.DS_Store
+
+# Logs and temp files
+*.log
+*.pid
+*.tmp
+*.bak
+
+# Environment
+.env
+.env.local
+
+# Documentation (not needed in image)
+*.md
+LICENSE
+DOCKER_COMMANDS.md
+
+# Scripts (handled by entrypoint)
+start.sh
+start.bat
+
+# Node
+node_modules/
+npm-debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+.dockerignore
+Dockerfile
+docker-compose.yml

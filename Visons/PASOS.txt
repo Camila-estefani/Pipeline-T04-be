@@ -1,0 +1,74 @@
+═══════════════════════════════════════════════════════════════
+  INSTRUCCIONES PARA EJECUTAR EL PROYECTO CON DOCKER
+═══════════════════════════════════════════════════════════════
+
+REQUISITOS:
+  - Docker instalado
+  - Docker Compose instalado
+
+═══════════════════════════════════════════════════════════════
+  PASO 1: Iniciar los Contenedores
+═══════════════════════════════════════════════════════════════
+
+Abre la terminal en la carpeta del proyecto y ejecuta:
+
+  docker-compose down -v
+  docker-compose up -d --build
+
+═══════════════════════════════════════════════════════════════
+  PASO 2: Crear la Base de Datos (ESPERA 45 SEGUNDOS)
+═══════════════════════════════════════════════════════════════
+
+Después de que los contenedores inicien, ejecuta:
+
+  docker exec visons-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Admin12345! -N -C -Q "CREATE DATABASE Visons;"
+  docker exec visons-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Admin12345! -N -C -i /docker-entrypoint-initdb.d/db.sql
+
+═══════════════════════════════════════════════════════════════
+  PASO 3: Reiniciar Spring Boot para Conectar con BD
+═══════════════════════════════════════════════════════════════
+
+  docker-compose restart visons-app
+
+═══════════════════════════════════════════════════════════════
+  PASO 4: Acceder a la API
+═══════════════════════════════════════════════════════════════
+
+Abre en tu navegador:
+
+  http://localhost:9090/swagger-ui.html
+
+O prueba con curl:
+
+  curl http://localhost:9090/v1/api/customer/
+
+═══════════════════════════════════════════════════════════════
+  DETALLES DE ACCESO
+═══════════════════════════════════════════════════════════════
+
+SQL Server:
+  Host: localhost:1433
+  Usuario: sa
+  Contraseña: Admin12345!
+
+Spring Boot API:
+  URL: http://localhost:9090
+  Swagger: http://localhost:9090/swagger-ui.html
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS ÚTILES
+═══════════════════════════════════════════════════════════════
+
+Ver logs:
+  docker-compose logs -f visons-app
+
+Detener contenedores:
+  docker-compose down
+
+Eliminar todo (incluyendo datos):
+  docker-compose down -v
+
+Verificar status:
+  docker-compose ps
+
+═══════════════════════════════════════════════════════════════
