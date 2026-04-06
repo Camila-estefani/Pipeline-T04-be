@@ -2,6 +2,8 @@ server:
   port: ${PORT:9090}  # Valor por defecto si PORT no está configurado
   url: ${SERVER_URL:http://localhost:9090}  # Valor por defecto si SERVER_URL no está configurado
 
+# PRUEBA CAMILA
+
 spring:
   datasource:
     url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=Visons;encrypt=true;trustServerCertificate=true}
