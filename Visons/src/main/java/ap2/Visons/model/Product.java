@@ -3,6 +3,8 @@ package ap2.Visons.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,6 +16,7 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "PRODUCTS")
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class Product {
 
     @Id

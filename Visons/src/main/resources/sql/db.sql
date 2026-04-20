@@ -32,7 +32,11 @@ CREATE TABLE PROVIDERS (
     company_name NVARCHAR(200) NOT NULL,
     tax_id NVARCHAR(20) NULL UNIQUE,
     product_type NVARCHAR(100) NULL,
-    is_active BIT NOT NULL DEFAULT 1
+    is_active BIT NOT NULL DEFAULT 1,
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
+    deleted_at DATETIME NULL,
+    restored_at DATETIME NULL
 );
 
 CREATE TABLE CLIENTS (
@@ -43,7 +47,11 @@ CREATE TABLE CLIENTS (
     address NVARCHAR(MAX) NULL,
     email NVARCHAR(150) NULL,
     credit_limit DECIMAL(18,2) NULL,
-    is_active BIT NOT NULL DEFAULT 1
+    is_active BIT NOT NULL DEFAULT 1,
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
+    deleted_at DATETIME NULL,
+    restored_at DATETIME NULL
 );
 
 CREATE TABLE UBIGEO (

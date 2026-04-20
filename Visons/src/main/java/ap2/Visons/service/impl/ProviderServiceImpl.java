@@ -1,13 +1,16 @@
 package ap2.Visons.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import ap2.Visons.model.Provider;
 import ap2.Visons.repository.ProviderRepository;
 import ap2.Visons.service.ProviderService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
-import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -47,8 +50,13 @@ public class ProviderServiceImpl implements ProviderService {
     @Override
     public Provider save(Provider provider) {
         log.info("Registrando proveedor: {}", provider);
+        LocalDateTime now = LocalDateTime.now();
         provider.setProviderId(null);
         provider.setIsActive(true);
+        provider.setCreatedAt(now);
+        provider.setUpdatedAt(null);
+        provider.setDeletedAt(null);
+        provider.setRestoredAt(null);
         return providerRepository.save(provider);
     }
 
@@ -62,6 +70,7 @@ public class ProviderServiceImpl implements ProviderService {
         existing.setCompanyName(provider.getCompanyName());
         existing.setTaxId(provider.getTaxId());
         existing.setProductType(provider.getProductType());
+        existing.setUpdatedAt(LocalDateTime.now());
 
         return providerRepository.save(existing);
     }
@@ -72,6 +81,7 @@ public class ProviderServiceImpl implements ProviderService {
         log.info("Eliminando lógico proveedor: {}", id);
         Provider provider = providerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Provider not found with ID: " + id));
+        provider.setDeletedAt(LocalDateTime.now());
         provider.setIsActive(false);
         return providerRepository.save(provider);
     }
@@ -82,6 +92,7 @@ public class ProviderServiceImpl implements ProviderService {
         log.info("Restaurando lógico proveedor: {}", id);
         Provider provider = providerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Provider not found with ID: " + id));
+        provider.setRestoredAt(LocalDateTime.now());
         provider.setIsActive(true);
         return providerRepository.save(provider);
     }

@@ -1,6 +1,9 @@
 package ap2.Visons.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +16,7 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "CLIENTS")
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class Customer {
 
     @Id
@@ -40,4 +44,16 @@ public class Customer {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "restored_at")
+    private LocalDateTime restoredAt;
 }

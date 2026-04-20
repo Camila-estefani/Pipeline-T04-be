@@ -1,5 +1,9 @@
 package ap2.Visons.model;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,6 +15,7 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "PROVIDERS")
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class Provider {
 
     @Id
@@ -29,4 +34,16 @@ public class Provider {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "restored_at")
+    private LocalDateTime restoredAt;
 }

@@ -1,12 +1,10 @@
 # docker-compose -f docker-compose-be.yml up -d
 # docker-compose -f docker-compose-be.yml down
 
-version: '3.8'
-
 services:
   visons-app:
     image: diego5621/diegodock:latest   # cambiar tagname según sea necesario
-    container_name: visons-backend
+    container_name: visons-backend-diego
     ports:
       - "8080:8080"
     environment:

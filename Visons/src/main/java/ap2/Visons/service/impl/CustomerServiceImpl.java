@@ -1,5 +1,6 @@
 package ap2.Visons.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,7 +50,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer save(Customer customer) {
         log.info("Registrando nuevo cliente: {}", customer.getCompanyName());
+        LocalDateTime now = LocalDateTime.now();
         customer.setIsActive(true);
+        customer.setCreatedAt(now);
+        customer.setUpdatedAt(null);
+        customer.setDeletedAt(null);
+        customer.setRestoredAt(null);
         return customerRepository.save(customer);
     }
 
@@ -81,6 +87,8 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.setCreditLimit(customerDetails.getCreditLimit());
             }
 
+            customer.setUpdatedAt(LocalDateTime.now());
+
             return customerRepository.save(customer);
         } else {
             log.warn("Cliente con ID {} no encontrado", id);
@@ -96,6 +104,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         if (existingCustomer.isPresent()) {
             Customer customer = existingCustomer.get();
+            customer.setDeletedAt(LocalDateTime.now());
             customer.setIsActive(false);
             return customerRepository.save(customer);
         } else {
@@ -112,6 +121,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         if (existingCustomer.isPresent()) {
             Customer customer = existingCustomer.get();
+            customer.setRestoredAt(LocalDateTime.now());
             customer.setIsActive(true);
             return customerRepository.save(customer);
         } else {
