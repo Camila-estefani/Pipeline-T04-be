@@ -3,7 +3,10 @@
 
 services:
   visons-app:
-    image: diego5621/diegodock:latest   # cambiar tagname según sea necesario
+    build:
+      context: ..
+      dockerfile: ../dockerfile-diego/Dockerfile
+    image: diego5621/diegodock:latest
     container_name: visons-backend-diego
     ports:
       - "8080:8080"

@@ -3,7 +3,7 @@
 
 services:
   mssql-server:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: diego5621/sql-server:2022-latest
     container_name: visons-mssql
     environment:
       ACCEPT_EULA: "Y"
