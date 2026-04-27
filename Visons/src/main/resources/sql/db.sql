@@ -135,3 +135,16 @@ CREATE TABLE ORDER_DETAILS (
 
 
 
+--Nuevas tablas para la interfaz del ADMIN--
+CREATE TABLE ROLES (
+    role_id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE CLIENT_ROLES (
+    client_id INT,
+    role_id INT,
+    PRIMARY KEY (client_id, role_id),
+    FOREIGN KEY (client_id) REFERENCES CLIENTS(client_id),
+    FOREIGN KEY (role_id) REFERENCES ROLES(role_id)
+);

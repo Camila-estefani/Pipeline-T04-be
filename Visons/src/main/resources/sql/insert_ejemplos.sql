@@ -53,3 +53,7 @@ UNION ALL
 SELECT 'CLIENTES', COUNT(*) FROM CLIENTS;
 
 
+---Datos para las nuevas tablas para la interfaz de ADMIN---
+INSERT INTO ROLES (name) VALUES ('ADMIN');
+INSERT INTO ROLES (name) VALUES ('EMPLOYEE');
+INSERT INTO ROLES (name) VALUES ('CLIENT');
