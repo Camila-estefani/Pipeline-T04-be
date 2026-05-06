@@ -1,7 +1,0 @@
-USE master;
-
-IF EXISTS (SELECT name FROM sys.databases WHERE name = 'Visons')
-BEGIN
-    ALTER DATABASE Visons SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE Visons;
-END
