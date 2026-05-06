@@ -54,6 +54,7 @@ SELECT 'CLIENTES', COUNT(*) FROM CLIENTS;
 
 
 ---Datos para las nuevas tablas para la interfaz de ADMIN---
-INSERT INTO ROLES (name) VALUES ('ADMIN');
-INSERT INTO ROLES (name) VALUES ('EMPLOYEE');
-INSERT INTO ROLES (name) VALUES ('CLIENT');
+INSERT INTO ROLES (name, description) VALUES ('ADMIN', 'Administrador del sistema');
+INSERT INTO ROLES (name, description) VALUES ('EMPLOYEE', 'Empleado del sistema');
+INSERT INTO ROLES (name, description) VALUES ('CLIENT', 'Cliente del sistema');
+

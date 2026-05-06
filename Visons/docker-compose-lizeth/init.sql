@@ -133,8 +133,6 @@ CREATE TABLE ORDER_DETAILS (
     unit_price DECIMAL(18,4) NOT NULL
 );
 
-
-
 --Nuevas tablas para la interfaz del ADMIN--
 
 CREATE TABLE USER_TYPES (

@@ -25,6 +25,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 # 1. Construir la imagen desde tu Dockerfile
 # docker build -t lizethquispesuarez/springboot-sqlserver:1.0 -f dockerfile-lizeth/Dockerfile .
+# docker build -t lizethquispesuarez/springboot-sqlserver:1.0 .
 
 # 2. Ejecutar SQL Server en contenedor
 # docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=Admin12345!" -p 1433:1433 --name mssql-server -d mcr.microsoft.com/mssql/server:2022-latest
@@ -34,3 +35,5 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 # 4. Subir tu imagen a DockerHub
 # docker push lizethquispesuarez/springboot-sqlserver:1.0
+
+# 

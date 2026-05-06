@@ -5,7 +5,7 @@ version: '3.8'
 
 services:
   mssql-server:
-    image: lizethquispesuarez/sql-server:latest
+    image: lizethquispesuarez/sql-server:2022
     container_name: sqlserver-db
     environment:
       ACCEPT_EULA: "Y"
