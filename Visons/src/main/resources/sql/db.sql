@@ -32,8 +32,13 @@ CREATE TABLE PROVIDERS (
     company_name NVARCHAR(200) NOT NULL,
     tax_id NVARCHAR(20) NULL UNIQUE,
     product_type NVARCHAR(100) NULL,
+    contact_email NVARCHAR(150) NULL,
+    contact_phone NVARCHAR(20) NULL,
+    address NVARCHAR(MAX) NULL,
     is_active BIT NOT NULL DEFAULT 1,
+    created_by NVARCHAR(100) NULL,
     created_at DATETIME NULL,
+    updated_by NVARCHAR(100) NULL,
     updated_at DATETIME NULL,
     deleted_at DATETIME NULL,
     restored_at DATETIME NULL
@@ -176,7 +181,6 @@ CREATE TABLE USERS (
     FOREIGN KEY (client_id) REFERENCES CLIENTS(client_id),
     FOREIGN KEY (user_type_id) REFERENCES USER_TYPES(id)
 );
-
 
 
 CREATE TABLE ROLES (

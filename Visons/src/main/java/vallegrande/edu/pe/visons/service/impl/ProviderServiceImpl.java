@@ -44,7 +44,9 @@ public class ProviderServiceImpl implements ProviderService {
         LocalDateTime now = LocalDateTime.now();
         provider.setProviderId(null);
         provider.setIsActive(true);
+        provider.setCreatedBy(provider.getCreatedBy() != null ? provider.getCreatedBy() : "SYSTEM");
         provider.setCreatedAt(now);
+        provider.setUpdatedBy(null);
         provider.setUpdatedAt(null);
         provider.setDeletedAt(null);
         provider.setRestoredAt(null);
@@ -58,6 +60,10 @@ public class ProviderServiceImpl implements ProviderService {
         existing.setCompanyName(provider.getCompanyName());
         existing.setTaxId(provider.getTaxId());
         existing.setProductType(provider.getProductType());
+        existing.setContactEmail(provider.getContactEmail());
+        existing.setContactPhone(provider.getContactPhone());
+        existing.setAddress(provider.getAddress());
+        existing.setUpdatedBy(provider.getUpdatedBy() != null ? provider.getUpdatedBy() : "SYSTEM");
         existing.setUpdatedAt(LocalDateTime.now());
         return providerRepository.save(existing);
     }

@@ -32,11 +32,26 @@ public class Provider {
     @Column(name = "product_type", length = 100)
     private String productType;
 
+    @Column(name = "contact_email", length = 150)
+    private String contactEmail;
+
+    @Column(name = "contact_phone", length = 20)
+    private String contactPhone;
+
+    @Column(name = "address")
+    private String address;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
