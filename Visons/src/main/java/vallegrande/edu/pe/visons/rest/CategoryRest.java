@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,7 +30,7 @@ public class CategoryRest {
         this.categoryService = categoryService;
     }
 
-    @GetMapping({"/", ""})
+    @GetMapping({"", "/"})
     @Operation(summary = "Get All Categories", description = "Get All Categories")
     public List<Category> findAll() {
         return categoryService.findAll();
@@ -55,25 +55,24 @@ public class CategoryRest {
     }
 
     @PostMapping("/save")
-    @Operation(summary = "Save Category", description = "Save Category")
+    @Operation(summary = "Crear (POST) - (fecha-hora)", description = "Save Category")
     public Category save(@RequestBody Category category) {
         return categoryService.save(category);
     }
 
-    @PatchMapping("/update/{id}")
-    @Operation(summary = "Update Category", description = "Update Category")
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Editar (PUT) - (fecha-hora)", description = "Update Category")
     public Category update(@PathVariable Integer id, @RequestBody Category category) {
         return categoryService.update(id, category);
     }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Logical Delete Category", description = "Logical Delete Category")
+    @PatchMapping("/{id}")
+    @Operation(summary = "Eliminar (lógico)    (PATCH) - (fecha-hora)", description = "Logical Delete Category")
     public Category delete(@PathVariable Integer id) {
         return categoryService.delete(id);
     }
 
-    @PostMapping("/restore/{id}")
-    @Operation(summary = "Logical Restore Category", description = "Logical Restore Category")
+    @PatchMapping("/restore/{id}")
+    @Operation(summary = "Restaurar (lógico) (PATCH) - (fecha-hora).", description = "Logical Restore Category")
     public Category restore(@PathVariable Integer id) {
         return categoryService.restore(id);
     }

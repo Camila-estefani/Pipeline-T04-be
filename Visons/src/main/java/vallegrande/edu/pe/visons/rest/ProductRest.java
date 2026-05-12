@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,7 +30,7 @@ public class ProductRest {
         this.productService = productService;
     }
 
-    @GetMapping({"/", ""})
+    @GetMapping({"", "/"})
     @Operation(summary = "Get All Products", description = "Get All Products")
     public List<Product> findAll() {
         return productService.findAll();
@@ -49,25 +49,24 @@ public class ProductRest {
     }
 
     @PostMapping("/save")
-    @Operation(summary = "Save Product", description = "Save Product")
+    @Operation(summary = "Crear (POST) - (fecha-hora)", description = "Save Product")
     public Product save(@RequestBody Product product) {
         return productService.save(product);
     }
 
-    @PatchMapping("/update/{id}")
-    @Operation(summary = "Update Product", description = "Update Product")
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Editar (PUT) - (fecha-hora)", description = "Update Product")
     public Product update(@PathVariable Integer id, @RequestBody Product product) {
         return productService.update(id, product);
     }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Logical Delete Product", description = "Logical Delete Product")
+    @PatchMapping("/{id}")
+    @Operation(summary = "Eliminar (lógico)    (PATCH) - (fecha-hora)", description = "Logical Delete Product")
     public Product delete(@PathVariable Integer id) {
         return productService.delete(id);
     }
 
-    @PostMapping("/restore/{id}")
-    @Operation(summary = "Logical Restore Product", description = "Logical Restore Product")
+    @PatchMapping("/restore/{id}")
+    @Operation(summary = "Restaurar (lógico) (PATCH) - (fecha-hora).", description = "Logical Restore Product")
     public Product restore(@PathVariable Integer id) {
         return productService.restore(id);
     }

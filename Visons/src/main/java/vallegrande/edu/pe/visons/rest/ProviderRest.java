@@ -9,11 +9,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -115,25 +115,24 @@ public class ProviderRest {
     }
 
     @PostMapping("/save")
-    @Operation(summary = "Save Provider", description = "Save Provider")
+    @Operation(summary = "Crear (POST) - (fecha-hora)", description = "Save Provider")
     public Provider save(@RequestBody Provider provider) {
         return providerService.save(provider);
     }
 
-    @PatchMapping("/update/{id}")
-    @Operation(summary = "Update Provider", description = "Update Provider")
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Editar (PUT) - (fecha-hora)", description = "Update Provider")
     public Provider update(@PathVariable Integer id, @RequestBody Provider provider) {
         return providerService.update(id, provider);
     }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Logical Delete Provider", description = "Logical Delete Provider")
+    @PatchMapping("/{id}")
+    @Operation(summary = "Eliminar (lógico)    (PATCH) - (fecha-hora)", description = "Logical Delete Provider")
     public Provider delete(@PathVariable Integer id) {
         return providerService.delete(id);
     }
 
-    @PostMapping("/restore/{id}")
-    @Operation(summary = "Logical Restore Provider", description = "Logical Restore Provider")
+    @PatchMapping("/restore/{id}")
+    @Operation(summary = "Restaurar (lógico) (PATCH) - (fecha-hora).", description = "Logical Restore Provider")
     public Provider restore(@PathVariable Integer id) {
         return providerService.restore(id);
     }

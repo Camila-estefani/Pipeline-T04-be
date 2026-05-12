@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,7 +30,7 @@ public class WorkerRest {
         this.workerService = workerService;
     }
 
-    @GetMapping({"/", ""})
+    @GetMapping({"", "/"})
     @Operation(summary = "Get All Workers", description = "Get All Workers")
     public List<Worker> findAll() {
         return workerService.findAll();
@@ -49,25 +49,24 @@ public class WorkerRest {
     }
 
     @PostMapping("/save")
-    @Operation(summary = "Save Worker", description = "Save Worker")
+    @Operation(summary = "Crear (POST) - (fecha-hora)", description = "Save Worker")
     public Worker save(@RequestBody Worker worker) {
         return workerService.save(worker);
     }
 
-    @PatchMapping("/update/{id}")
-    @Operation(summary = "Update Worker", description = "Update Worker")
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Editar (PUT) - (fecha-hora)", description = "Update Worker")
     public Worker update(@PathVariable Integer id, @RequestBody Worker worker) {
         return workerService.update(id, worker);
     }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Logical Delete Worker", description = "Logical Delete Worker")
+    @PatchMapping("/{id}")
+    @Operation(summary = "Eliminar (lógico) (PATCH) - (fecha-hora)", description = "Logical Delete Worker")
     public Worker delete(@PathVariable Integer id) {
         return workerService.delete(id);
     }
 
-    @PostMapping("/restore/{id}")
-    @Operation(summary = "Logical Restore Worker", description = "Logical Restore Worker")
+    @PatchMapping("/restore/{id}")
+    @Operation(summary = "Restaurar (lógico) (PATCH) - (fecha-hora).", description = "Logical Restore Worker")
     public Worker restore(@PathVariable Integer id) {
         return workerService.restore(id);
     }

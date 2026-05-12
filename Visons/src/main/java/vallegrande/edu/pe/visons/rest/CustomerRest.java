@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,7 +30,7 @@ public class CustomerRest {
         this.customerService = customerService;
     }
 
-    @GetMapping({"/", ""})
+    @GetMapping({"", "/"})
     @Operation(summary = "Get All Customers", description = "Get All Customers")
     public List<Customer> findAll() {
         return customerService.findAll();
@@ -49,25 +49,24 @@ public class CustomerRest {
     }
 
     @PostMapping("/save")
-    @Operation(summary = "Save Customer", description = "Save Customer")
+    @Operation(summary = "Crear (POST) - (fecha-hora)", description = "Save Customer")
     public Customer save(@RequestBody Customer customer) {
         return customerService.save(customer);
     }
 
-    @PatchMapping("/update/{id}")
-    @Operation(summary = "Update Customer", description = "Update Customer")
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Editar (PUT) - (fecha-hora)", description = "Update Customer")
     public Customer update(@PathVariable Integer id, @RequestBody Customer customer) {
         return customerService.update(id, customer);
     }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Logical Delete Customer", description = "Logical Delete Customer")
+    @PatchMapping("/{id}")
+    @Operation(summary = "Eliminar (lógico)    (PATCH) - (fecha-hora)", description = "Logical Delete Customer")
     public Customer delete(@PathVariable Integer id) {
         return customerService.delete(id);
     }
 
-    @PostMapping("/restore/{id}")
-    @Operation(summary = "Logical Restore Customer", description = "Logical Restore Customer")
+    @PatchMapping("/restore/{id}")
+    @Operation(summary = "Restaurar (lógico) (PATCH) - (fecha-hora).", description = "Logical Restore Customer")
     public Customer restore(@PathVariable Integer id) {
         return customerService.restore(id);
     }
