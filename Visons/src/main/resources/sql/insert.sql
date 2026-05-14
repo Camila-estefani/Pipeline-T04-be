@@ -257,3 +257,17 @@ VALUES
 (9, 9, 1200.000, 4.3333),
 (10, 10, 350.000, 5.7142);
 
+
+
+
+
+
+--Consulta beneficiada Tabla Products--
+SELECT *
+FROM PRODUCTS
+WHERE name = 'Mango Kent';
+
+--Consulta beneficiada Tabla PURCHASES--
+SELECT *
+FROM PURCHASES
+WHERE provider_id = 3;
