@@ -210,3 +210,13 @@ CREATE TABLE AUDIT_LOG (
 
     FOREIGN KEY (user_id) REFERENCES USERS(user_id)
 );
+
+
+--Indice Tabla Maestra: PRODUCTS--
+CREATE INDEX idx_products_name
+ON PRODUCTS(name);
+
+--Consulta beneficiada--
+SELECT *
+FROM PURCHASES
+WHERE provider_id = 3;
