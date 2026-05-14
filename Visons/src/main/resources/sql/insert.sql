@@ -139,3 +139,121 @@ VALUES
 ((SELECT user_id FROM USERS WHERE username='emp2'),
  (SELECT role_id FROM ROLES WHERE name='EMPLOYEE'));
 GO
+
+-- =========================================
+-- TABLA: CATEGORIES
+-- Necesaria para relacionar los productos
+-- =========================================
+
+INSERT INTO CATEGORIES (name, description, is_active)
+VALUES
+('Frutas', 'Productos frutales frescos', 1),
+('Verduras', 'Productos vegetales frescos', 1),
+('Exportacion', 'Productos para exportacion', 1),
+('Organicos', 'Productos organicos certificados', 1),
+('Citricos', 'Frutas citricas', 1),
+('Tropicales', 'Frutas tropicales', 1),
+('Congelados', 'Productos congelados', 1),
+('Premium', 'Productos premium seleccionados', 1),
+('Procesados', 'Productos procesados', 1),
+('Agroindustria', 'Productos agroindustriales', 1);
+
+-- =========================================
+-- TABLA: PROVIDERS
+-- Necesaria para registrar compras
+-- =========================================
+
+INSERT INTO PROVIDERS (
+    company_name,
+    tax_id,
+    product_type,
+    is_active,
+    created_at
+)
+VALUES
+('AgroExport SAC', '20111111111', 'Mangos', 1, GETDATE()),
+('Campos del Sur SAC', '20222222222', 'Palta', 1, GETDATE()),
+('Fresh Fruits Peru', '20333333333', 'Uvas', 1, GETDATE()),
+('Green Valley SAC', '20444444444', 'Citricos', 1, GETDATE()),
+('Vision Agro SAC', '20555555555', 'Banano', 1, GETDATE()),
+('Natural Foods SAC', '20666666666', 'Arandanos', 1, GETDATE()),
+('Exportadora Norte', '20777777777', 'Limon', 1, GETDATE()),
+('Peru Fresh Company', '20888888888', 'Papaya', 1, GETDATE()),
+('BioCampos SAC', '20999999999', 'Organicos', 1, GETDATE()),
+('Sun Fruits Peru', '20101010101', 'Piña', 1, GETDATE());
+
+-- =========================================
+-- TABLA MAESTRA: PRODUCTS
+-- 10 inserts de productos
+-- =========================================
+
+INSERT INTO PRODUCTS (
+    category_id,
+    name,
+    variety,
+    caliber,
+    unit_measure,
+    box_weight_kg,
+    is_own_production,
+    is_active,
+    created_at
+)
+VALUES
+(1, 'Mango', 'Kent', 'Grande', 'KG', 10.50, 1, 1, GETDATE()),
+(1, 'Palta', 'Hass', 'Mediano', 'KG', 8.00, 1, 1, GETDATE()),
+(5, 'Limon', 'Tahiti', 'Pequeño', 'KG', 12.00, 0, 1, GETDATE()),
+(6, 'Papaya', 'Maradol', 'Grande', 'KG', 15.00, 0, 1, GETDATE()),
+(6, 'Piña', 'Golden', 'Grande', 'KG', 14.00, 1, 1, GETDATE()),
+(1, 'Uva', 'Red Globe', 'Mediano', 'KG', 9.50, 1, 1, GETDATE()),
+(4, 'Arandano', 'Bluecrop', 'Pequeño', 'KG', 5.00, 0, 1, GETDATE()),
+(5, 'Naranja', 'Valencia', 'Grande', 'KG', 13.00, 1, 1, GETDATE()),
+(2, 'Espinaca', 'Baby', 'Pequeño', 'KG', 4.00, 0, 1, GETDATE()),
+(8, 'Fresa', 'Premium', 'Mediano', 'KG', 6.50, 1, 1, GETDATE());
+
+-- =========================================
+-- TABLA TRANSACCIONAL: PURCHASES
+-- Registro de compras realizadas
+-- =========================================
+
+INSERT INTO PURCHASES (
+    provider_id,
+    order_code,
+    total_amount,
+    status,
+    purchase_date
+)
+VALUES
+(1, 'PUR-001', 2500.00, 'COMPLETED', GETDATE()),
+(2, 'PUR-002', 1800.50, 'COMPLETED', GETDATE()),
+(3, 'PUR-003', 3200.75, 'PENDING', GETDATE()),
+(4, 'PUR-004', 4100.20, 'COMPLETED', GETDATE()),
+(5, 'PUR-005', 950.00, 'PENDING', GETDATE()),
+(6, 'PUR-006', 2750.40, 'COMPLETED', GETDATE()),
+(7, 'PUR-007', 3890.00, 'COMPLETED', GETDATE()),
+(8, 'PUR-008', 1450.90, 'PENDING', GETDATE()),
+(9, 'PUR-009', 5200.00, 'COMPLETED', GETDATE()),
+(10, 'PUR-010', 1999.99, 'COMPLETED', GETDATE());
+
+-- =========================================
+-- TABLA TRANSACCIONAL: PURCHASE_DETAILS
+-- Detalle de productos comprados
+-- =========================================
+
+INSERT INTO PURCHASE_DETAILS (
+    purchase_id,
+    product_id,
+    quantity_kg,
+    unit_price
+)
+VALUES
+(1, 1, 500.000, 5.0000),
+(2, 2, 300.000, 6.0016),
+(3, 3, 700.000, 4.5725),
+(4, 4, 1000.000, 4.1002),
+(5, 5, 200.000, 4.7500),
+(6, 6, 450.000, 6.1120),
+(7, 7, 800.000, 4.8625),
+(8, 8, 250.000, 5.8036),
+(9, 9, 1200.000, 4.3333),
+(10, 10, 350.000, 5.7142);
+
