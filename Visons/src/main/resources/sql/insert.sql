@@ -124,7 +124,12 @@ GO
 -- ROLES
 --------------------------------------------------
 
-
+INSERT INTO ROLES (name, description)
+VALUES
+('ADMIN', 'Administrador del sistema'),
+('EMPLOYEE', 'Empleado del sistema'),
+('CLIENT', 'Cliente del sistema');
+GO
 --------------------------------------------------
 -- USER_ROLES (CORREGIDO)
 --------------------------------------------------
@@ -265,7 +270,7 @@ VALUES
 --Consulta beneficiada Tabla Products--
 SELECT *
 FROM PRODUCTS
-WHERE name = 'Mango Kent';
+WHERE name = 'Mango';
 
 --Consulta beneficiada Tabla PURCHASES--
 SELECT *

@@ -216,7 +216,6 @@ CREATE TABLE AUDIT_LOG (
 CREATE INDEX idx_products_name
 ON PRODUCTS(name);
 
---Consulta beneficiada--
-SELECT *
-FROM PURCHASES
-WHERE provider_id = 3;
+--Indice Tabla Transaccional: PURCHASES--
+CREATE INDEX idx_purchases_provider
+ON PURCHASES(provider_id);
