@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.http.ResponseEntity;
 
+import vallegrande.edu.pe.visons.dto.RoleRequest;
+import vallegrande.edu.pe.visons.dto.RoleResponse;
+import vallegrande.edu.pe.visons.dto.UserResponse;
 import vallegrande.edu.pe.visons.service.RoleService;
 
 @RestController

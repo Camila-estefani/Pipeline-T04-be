@@ -1,4 +1,4 @@
-package vallegrande.edu.pe.visons.rest;
+package vallegrande.edu.pe.visons.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

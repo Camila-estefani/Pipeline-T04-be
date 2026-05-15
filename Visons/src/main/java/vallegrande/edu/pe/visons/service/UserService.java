@@ -3,10 +3,10 @@ package vallegrande.edu.pe.visons.service;
 import java.util.List;
 import java.util.Optional;
 
-import vallegrande.edu.pe.visons.rest.RoleResponse;
-import vallegrande.edu.pe.visons.rest.UserResponse;
-import vallegrande.edu.pe.visons.rest.UserRoleRequest;
-import vallegrande.edu.pe.visons.rest.UserUpsertRequest;
+import vallegrande.edu.pe.visons.dto.RoleResponse;
+import vallegrande.edu.pe.visons.dto.UserResponse;
+import vallegrande.edu.pe.visons.dto.UserRoleRequest;
+import vallegrande.edu.pe.visons.dto.UserUpsertRequest;
 
 public interface UserService {
 

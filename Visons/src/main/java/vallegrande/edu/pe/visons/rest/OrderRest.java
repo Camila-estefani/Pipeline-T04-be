@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import vallegrande.edu.pe.visons.dto.OrderDTO;
+import vallegrande.edu.pe.visons.dto.OrderResponseDTO;
 import vallegrande.edu.pe.visons.model.Customer;
 import vallegrande.edu.pe.visons.model.Order;
 import vallegrande.edu.pe.visons.repository.CustomerRepository;

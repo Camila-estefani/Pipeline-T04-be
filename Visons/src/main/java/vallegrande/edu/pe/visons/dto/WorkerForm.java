@@ -1,4 +1,4 @@
-package vallegrande.edu.pe.visons.rest;
+package vallegrande.edu.pe.visons.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

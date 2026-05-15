@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import vallegrande.edu.pe.visons.dto.ProviderSummaryDTO;
 import vallegrande.edu.pe.visons.model.Provider;
 import vallegrande.edu.pe.visons.service.ProviderService;
 

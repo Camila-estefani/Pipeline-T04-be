@@ -12,12 +12,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import vallegrande.edu.pe.visons.rest.ClientForm;
-import vallegrande.edu.pe.visons.rest.RoleResponse;
-import vallegrande.edu.pe.visons.rest.UserResponse;
-import vallegrande.edu.pe.visons.rest.UserRoleRequest;
-import vallegrande.edu.pe.visons.rest.UserUpsertRequest;
-import vallegrande.edu.pe.visons.rest.WorkerForm;
+import vallegrande.edu.pe.visons.dto.ClientForm;
+import vallegrande.edu.pe.visons.dto.RoleResponse;
+import vallegrande.edu.pe.visons.dto.UserResponse;
+import vallegrande.edu.pe.visons.dto.UserRoleRequest;
+import vallegrande.edu.pe.visons.dto.UserUpsertRequest;
+import vallegrande.edu.pe.visons.dto.WorkerForm;
 import vallegrande.edu.pe.visons.model.Client;
 import vallegrande.edu.pe.visons.model.Role;
 import vallegrande.edu.pe.visons.model.UserAccount;

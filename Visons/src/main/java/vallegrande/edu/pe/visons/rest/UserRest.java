@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import vallegrande.edu.pe.visons.dto.RoleResponse;
+import vallegrande.edu.pe.visons.dto.UserResponse;
+import vallegrande.edu.pe.visons.dto.UserRoleRequest;
+import vallegrande.edu.pe.visons.dto.UserUpsertRequest;
 import vallegrande.edu.pe.visons.service.UserService;
 
 @RestController

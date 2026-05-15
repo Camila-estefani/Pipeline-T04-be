@@ -1,4 +1,4 @@
-package vallegrande.edu.pe.visons.rest;
+package vallegrande.edu.pe.visons.config;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

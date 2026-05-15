@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import vallegrande.edu.pe.visons.rest.RoleRequest;
-import vallegrande.edu.pe.visons.rest.RoleResponse;
-import vallegrande.edu.pe.visons.rest.UserResponse;
+import vallegrande.edu.pe.visons.dto.RoleRequest;
+import vallegrande.edu.pe.visons.dto.RoleResponse;
+import vallegrande.edu.pe.visons.dto.UserResponse;
 import vallegrande.edu.pe.visons.model.Role;
 import vallegrande.edu.pe.visons.repository.RoleRepository;
 import vallegrande.edu.pe.visons.repository.UserAccountRepository;

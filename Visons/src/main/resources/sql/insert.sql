@@ -264,9 +264,6 @@ VALUES
 
 
 
-
-
-
 --Consulta beneficiada Tabla Products--
 SELECT *
 FROM PRODUCTS
