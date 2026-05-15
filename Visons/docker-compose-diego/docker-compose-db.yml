@@ -10,10 +10,10 @@ services:
       SA_PASSWORD: "Admin12345!"
       MSSQL_PID: "Express"
     ports:
-      - "1433:1433"
+      - "1434:1433"
     volumes:
       - mssql_data:/var/opt/mssql
-      - ./src/main/resources/sql:/docker-entrypoint-initdb.d
+      - ../src/main/resources/sql:/docker-entrypoint-initdb.d
     networks:
       - visons-network
     healthcheck:

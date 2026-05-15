@@ -5,7 +5,7 @@ services:
   visons-app:
     build:
       context: ..
-      dockerfile: ../dockerfile-diego/Dockerfile
+      dockerfile: dockerfile-diego/Dockerfile
     image: diego5621/diegodock:latest
     container_name: visons-backend-diego
     ports:
