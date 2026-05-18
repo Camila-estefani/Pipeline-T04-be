@@ -1,5 +1,5 @@
-# docker-compose -f docker-compose-be.yml up -d
-# docker-compose -f docker-compose-be.yml down
+# docker compose -f docker-compose-be.yml up -d
+# docker compose -f docker-compose-be.yml down
 
 services:
   visons-app:

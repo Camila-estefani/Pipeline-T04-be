@@ -31,118 +31,170 @@ GO
 --------------------------------------------------
 -- WORKERS (CORREGIDO - usa UBIGEO REAL)
 --------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000001')
 INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
-VALUES
-('Luis','Perez','999111111','luis@empresa.com','Lima',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='150101'),
-'DNI','70000001',GETDATE()),
+SELECT 'Luis','Perez','999111111','luis@empresa.com','Lima',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='150101'),'DNI','70000001',GETDATE();
 
-('Ana','Lopez','999111112','ana@empresa.com','Lima',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='150102'),
-'DNI','70000002',GETDATE()),
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000002')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Ana','Lopez','999111112','ana@empresa.com','Lima',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='150102'),'DNI','70000002',GETDATE();
 
-('Carlos','Diaz','999111113','carlos@empresa.com','Lima',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='150103'),
-'DNI','70000003',GETDATE()),
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000003')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Carlos','Diaz','999111113','carlos@empresa.com','Lima',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='150103'),'DNI','70000003',GETDATE();
 
-('Maria','Torres','999111114','maria@empresa.com','Arequipa',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='040101'),
-'DNI','70000004',GETDATE()),
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000004')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Maria','Torres','999111114','maria@empresa.com','Arequipa',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='040101'),'DNI','70000004',GETDATE();
 
-('Jose','Ramos','999111115','jose@empresa.com','Cusco',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='080101'),
-'DNI','70000005',GETDATE()),
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000005')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Jose','Ramos','999111115','jose@empresa.com','Cusco',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='080101'),'DNI','70000005',GETDATE();
 
-('Elena','Vega','999111116','elena@empresa.com','Junin',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='120101'),
-'DNI','70000006',GETDATE()),
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000006')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Elena','Vega','999111116','elena@empresa.com','Junin',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='120101'),'DNI','70000006',GETDATE();
 
-('Pedro','Castro','999111117','pedro@empresa.com','Ayacucho',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='050101'),
-'DNI','70000007',GETDATE()),
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000007')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Pedro','Castro','999111117','pedro@empresa.com','Ayacucho',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='050101'),'DNI','70000007',GETDATE();
 
-('Lucia','Flores','999111118','lucia@empresa.com','Trujillo',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='130101'),
-'DNI','70000008',GETDATE()),
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000008')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Lucia','Flores','999111118','lucia@empresa.com','Trujillo',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='130101'),'DNI','70000008',GETDATE();
 
-('Diego','Mendoza','999111119','diego@empresa.com','Piura',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='200101'),
-'DNI','70000009',GETDATE()),
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000009')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Diego','Mendoza','999111119','diego@empresa.com','Piura',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='200101'),'DNI','70000009',GETDATE();
 
-('Sofia','Reyes','999111120','sofia@empresa.com','Puno',
- (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='210101'),
-'DNI','70000010',GETDATE());
+IF NOT EXISTS (SELECT 1 FROM WORKERS WHERE document_number = '70000010')
+INSERT INTO WORKERS (first_name,last_name,phone,email,address,ubigeo_id,document_type,document_number,hire_date)
+SELECT 'Sofia','Reyes','999111120','sofia@empresa.com','Puno',
+       (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code='210101'),'DNI','70000010',GETDATE();
 GO
+
+--------------------------------------------------
+-- CLIENTS (SEED PARA LOGIN DE CLIENTE)
+--------------------------------------------------
+INSERT INTO CLIENTS (company_name, tax_id, country, address, email, credit_limit, is_active, created_at)
+VALUES
+('AgroExport S.A.C.', '20601234567', 'Perú', 'Av. Industrial 456, Ica', 'cliente@agroexport.pe', 25000.00, 1, GETDATE());
+
+DECLARE @ClientId INT = SCOPE_IDENTITY();
 
 --------------------------------------------------
 -- USERS (CORREGIDO)
 --------------------------------------------------
-INSERT INTO USERS (username,password_hash,user_type_id,worker_id,is_active)
+INSERT INTO USERS (username,password_hash,user_type_id,worker_id,client_id,is_active)
 VALUES
-('admin','123',
+('luis@empresa.com','70000001',
  (SELECT id FROM USER_TYPES WHERE name='ADMIN'),
- 1,1),
+ 1,NULL,1),
 
-('emp1','123',
+('ana@empresa.com','70000002',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 2,1),
+ 2,NULL,1),
 
-('emp2','123',
+('carlos@empresa.com','70000003',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 3,1),
+ 3,NULL,1),
 
-('emp3','123',
+('maria@empresa.com','70000004',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 4,1),
+ 4,NULL,1),
 
-('emp4','123',
+('jose@empresa.com','70000005',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 5,1),
+ 5,NULL,1),
 
-('emp5','123',
+('elena@empresa.com','70000006',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 6,1),
+ 6,NULL,1),
 
-('emp6','123',
+('pedro@empresa.com','70000007',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 7,1),
+ 7,NULL,1),
 
-('emp7','123',
+('lucia@empresa.com','70000008',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 8,1),
+ 8,NULL,1),
 
-('emp8','123',
+('diego@empresa.com','70000009',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 9,1),
+ 9,NULL,1),
 
-('emp9','123',
+('sofia@empresa.com','70000010',
  (SELECT id FROM USER_TYPES WHERE name='EMPLOYEE'),
- 10,1);
+ 10,NULL,1),
+
+('cliente@agroexport.pe','20601234567',
+ (SELECT id FROM USER_TYPES WHERE name='CLIENT'),
+ NULL,@ClientId,1);
 GO
 
 --------------------------------------------------
 -- ROLES
 --------------------------------------------------
-
+IF NOT EXISTS (SELECT 1 FROM ROLES WHERE name = 'ADMIN')
 INSERT INTO ROLES (name, description)
-VALUES
-('ADMIN', 'Administrador del sistema'),
-('EMPLOYEE', 'Empleado del sistema'),
-('CLIENT', 'Cliente del sistema');
+VALUES ('ADMIN', 'Administrador del sistema');
+
+IF NOT EXISTS (SELECT 1 FROM ROLES WHERE name = 'EMPLOYEE')
+INSERT INTO ROLES (name, description)
+VALUES ('EMPLOYEE', 'Empleado del sistema');
+
+IF NOT EXISTS (SELECT 1 FROM ROLES WHERE name = 'CLIENT')
+INSERT INTO ROLES (name, description)
+VALUES ('CLIENT', 'Cliente del sistema');
 GO
 --------------------------------------------------
 -- USER_ROLES (CORREGIDO)
 --------------------------------------------------
-INSERT INTO USER_ROLES (user_id,role_id)
+DELETE FROM USER_ROLES;
+
+INSERT INTO USER_ROLES (user_id, role_id)
 VALUES
-((SELECT user_id FROM USERS WHERE username='admin'),
+((SELECT user_id FROM USERS WHERE username='luis@empresa.com'),
  (SELECT role_id FROM ROLES WHERE name='ADMIN')),
 
-((SELECT user_id FROM USERS WHERE username='emp1'),
+((SELECT user_id FROM USERS WHERE username='ana@empresa.com'),
  (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
 
-((SELECT user_id FROM USERS WHERE username='emp2'),
- (SELECT role_id FROM ROLES WHERE name='EMPLOYEE'));
+((SELECT user_id FROM USERS WHERE username='carlos@empresa.com'),
+ (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
+
+((SELECT user_id FROM USERS WHERE username='maria@empresa.com'),
+ (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
+
+((SELECT user_id FROM USERS WHERE username='jose@empresa.com'),
+ (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
+
+((SELECT user_id FROM USERS WHERE username='elena@empresa.com'),
+ (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
+
+((SELECT user_id FROM USERS WHERE username='pedro@empresa.com'),
+ (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
+
+((SELECT user_id FROM USERS WHERE username='lucia@empresa.com'),
+ (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
+
+((SELECT user_id FROM USERS WHERE username='diego@empresa.com'),
+ (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
+
+((SELECT user_id FROM USERS WHERE username='sofia@empresa.com'),
+ (SELECT role_id FROM ROLES WHERE name='EMPLOYEE')),
+
+((SELECT user_id FROM USERS WHERE username='cliente@agroexport.pe'),
+ (SELECT role_id FROM ROLES WHERE name='CLIENT'));
 GO
 
 -- =========================================

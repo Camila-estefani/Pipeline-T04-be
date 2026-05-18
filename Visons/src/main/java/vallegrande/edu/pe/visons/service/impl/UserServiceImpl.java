@@ -8,10 +8,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import vallegrande.edu.pe.visons.dto.AuthLoginRequest;
 import vallegrande.edu.pe.visons.dto.ClientForm;
 import vallegrande.edu.pe.visons.dto.RoleResponse;
 import vallegrande.edu.pe.visons.dto.UserResponse;
@@ -164,6 +167,34 @@ public class UserServiceImpl implements UserService {
         return toResponse(userAccountRepository.save(existing));
     }
 
+    @Transactional
+    @Override
+    public UserResponse authenticate(AuthLoginRequest request) {
+        validateLoginRequest(request);
+
+        String username = request.getUsername().trim();
+        UserAccount userAccount = userAccountRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                        "Credenciales inválidas"));
+
+        if (Boolean.FALSE.equals(userAccount.getActive())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "La cuenta está inactiva");
+        }
+
+        String candidatePassword = request.getPassword().trim();
+        String roleCredential = resolveRoleCredential(userAccount);
+        boolean matchesRoleCredential = matchesCredential(candidatePassword, roleCredential);
+        boolean matchesStoredCredential = matchesCredential(candidatePassword, userAccount.getPasswordHash());
+
+        if (!matchesRoleCredential && !matchesStoredCredential) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+        }
+
+        userAccount.setLastLogin(LocalDateTime.now());
+        userAccountRepository.save(userAccount);
+        return toResponse(userAccount);
+    }
+
     @Override
     public List<UserResponse> findByRoleId(Integer roleId) {
         List<Integer> userIds = userRoleRepository.findUserIdsByRoleId(roleId);
@@ -210,6 +241,18 @@ public class UserServiceImpl implements UserService {
         }
         if (resolveUserType(request) == null) {
             throw new RuntimeException("User type is required");
+        }
+    }
+
+    private void validateLoginRequest(AuthLoginRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is required");
+        }
+        if (request.getUsername() == null || request.getUsername().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+        }
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
         }
     }
 
@@ -414,5 +457,37 @@ public class UserServiceImpl implements UserService {
         response.setDescription(role.getDescription());
         response.setUserCount(userRoleRepository.countUsersByRoleId(role.getRoleId()));
         return response;
+    }
+
+    private String resolveRoleCredential(UserAccount userAccount) {
+        if (userAccount.getClientId() != null) {
+            return clientRepository.findById(userAccount.getClientId())
+                    .map(Client::getTaxId)
+                    .orElse(null);
+        }
+
+        if (userAccount.getWorkerId() != null) {
+            return workerRepository.findById(userAccount.getWorkerId())
+                    .map(Worker::getDocumentNumber)
+                    .orElse(null);
+        }
+
+        return null;
+    }
+
+    private boolean matchesCredential(String rawPassword, String storedValue) {
+        if (rawPassword == null || storedValue == null || storedValue.isBlank()) {
+            return false;
+        }
+
+        if (rawPassword.equals(storedValue)) {
+            return true;
+        }
+
+        try {
+            return passwordEncoder.matches(rawPassword, storedValue);
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 }

@@ -11,4 +11,6 @@ import vallegrande.edu.pe.visons.model.UserAccount;
 public interface UserAccountRepository extends JpaRepository<UserAccount, Integer> {
 
     Optional<UserAccount> findByUsername(String username);
+
+    Optional<UserAccount> findByUsernameIgnoreCase(String username);
 }
