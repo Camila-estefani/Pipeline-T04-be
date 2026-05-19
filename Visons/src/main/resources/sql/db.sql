@@ -52,7 +52,7 @@ CREATE TABLE CLIENTS (
     phone NVARCHAR(20) NULL,
     address NVARCHAR(MAX) NULL,
     email NVARCHAR(150) NULL,
-    profile_image_url NVARCHAR(MAX) NULL,
+    profile_image_url NVARCHAR(500) NULL,
     credit_limit DECIMAL(18,2) NULL,
     is_active BIT NOT NULL DEFAULT 1,
     created_at DATETIME NULL,
