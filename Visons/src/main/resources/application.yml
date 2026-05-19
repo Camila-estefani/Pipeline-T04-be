@@ -17,7 +17,9 @@ server:
   url: http://localhost:8080
 
 app:
-  upload-dir: uploads/profile-images
+  # Store uploaded profile images inside the project's resources so they are
+  # served as static files. Path is relative to the project root.
+  upload-dir: src/main/resources/static/uploads/profile-images
 
 springdoc:
   api-docs:

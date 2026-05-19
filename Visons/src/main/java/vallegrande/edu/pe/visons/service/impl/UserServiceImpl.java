@@ -304,7 +304,8 @@ public class UserServiceImpl implements UserService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store profile image", ex);
         }
 
-        String relativePath = "/" + profileImagesDir.getFileName() + "/" + safeFileName;
+        // Save as /uploads/<folder>/<file> so it maps to the resource handler
+        String relativePath = "/uploads/" + profileImagesDir.getFileName() + "/" + safeFileName;
         client.setProfileImageUrl(relativePath);
         client.setUpdatedAt(LocalDateTime.now());
         clientRepository.save(client);

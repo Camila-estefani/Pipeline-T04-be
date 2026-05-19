@@ -17,7 +17,10 @@ public class StaticResourceConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path location = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path parent = location.getParent() != null ? location.getParent() : location;
+        // map /uploads/** to the parent directory (e.g. <project>/uploads/) so
+        // requests like /uploads/profile-images/FILE resolve to the correct file
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(location.toUri().toString() + "/");
+                .addResourceLocations(parent.toUri().toString() + "/");
     }
 }
