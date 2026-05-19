@@ -11,8 +11,10 @@ public class ClientForm {
     private String companyName;
     private String taxId;
     private String country;
+    private String phone;
     private String address;
     private String email;
+    private String profileImageUrl;
     private BigDecimal creditLimit;
     private Boolean active;
     private LocalDateTime createdAt;

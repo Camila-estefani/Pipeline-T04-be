@@ -1,6 +1,11 @@
 package vallegrande.edu.pe.visons.service.impl;
 
 import java.math.BigDecimal;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -8,14 +13,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.multipart.MultipartFile;
 
 import vallegrande.edu.pe.visons.dto.AuthLoginRequest;
 import vallegrande.edu.pe.visons.dto.ClientForm;
+import vallegrande.edu.pe.visons.dto.ClientProfileUpdateRequest;
 import vallegrande.edu.pe.visons.dto.RoleResponse;
 import vallegrande.edu.pe.visons.dto.UserResponse;
 import vallegrande.edu.pe.visons.dto.UserRoleRequest;
@@ -37,6 +45,8 @@ import vallegrande.edu.pe.visons.service.UserService;
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final String SESSION_USER_ID = "VISONS_CURRENT_USER_ID";
+
     private final UserAccountRepository userAccountRepository;
     private final UserTypeRepository userTypeRepository;
     private final WorkerRepository workerRepository;
@@ -44,16 +54,20 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final Path profileImagesDir;
 
     public UserServiceImpl(UserAccountRepository userAccountRepository, UserTypeRepository userTypeRepository,
             WorkerRepository workerRepository, ClientRepository clientRepository, RoleRepository roleRepository,
-            UserRoleRepository userRoleRepository) {
+            UserRoleRepository userRoleRepository,
+            org.springframework.core.env.Environment environment) {
         this.userAccountRepository = userAccountRepository;
         this.userTypeRepository = userTypeRepository;
         this.workerRepository = workerRepository;
         this.clientRepository = clientRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
+        String uploadDir = environment.getProperty("app.upload-dir", "uploads/profile-images");
+        this.profileImagesDir = Paths.get(uploadDir).toAbsolutePath().normalize();
     }
 
     @Override
@@ -196,6 +210,108 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse currentSessionUser(HttpSession session) {
+        return toResponse(getAuthenticatedUser(session));
+    }
+
+    @Transactional
+    @Override
+    public UserResponse updateCurrentClientProfile(HttpSession session, ClientProfileUpdateRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is required");
+        }
+
+        UserAccount userAccount = getAuthenticatedUser(session);
+        if (userAccount.getClientId() == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only client accounts can update this profile");
+        }
+
+        Client client = clientRepository.findById(userAccount.getClientId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found"));
+
+        boolean clientChanged = false;
+        if (request.getCompanyName() != null && !request.getCompanyName().isBlank()) {
+            client.setCompanyName(request.getCompanyName().trim());
+            clientChanged = true;
+        }
+        if (request.getPhone() != null) {
+            client.setPhone(request.getPhone().trim().isBlank() ? null : request.getPhone().trim());
+            clientChanged = true;
+        }
+        if (request.getAddress() != null) {
+            client.setAddress(request.getAddress().trim().isBlank() ? null : request.getAddress().trim());
+            clientChanged = true;
+        }
+        if (request.getProfileImageUrl() != null) {
+            client.setProfileImageUrl(request.getProfileImageUrl().trim().isBlank() ? null : request.getProfileImageUrl().trim());
+            clientChanged = true;
+        }
+
+        boolean passwordChanged = request.getNewPassword() != null && !request.getNewPassword().isBlank();
+        if (passwordChanged) {
+            if (request.getCurrentPassword() == null || request.getCurrentPassword().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is required");
+            }
+            if (request.getConfirmPassword() == null || !request.getNewPassword().equals(request.getConfirmPassword())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password confirmation does not match");
+            }
+            if (!matchesCurrentPassword(userAccount, request.getCurrentPassword().trim())) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is invalid");
+            }
+
+            userAccount.setPasswordHash(passwordEncoder.encode(request.getNewPassword().trim()));
+            userAccountRepository.save(userAccount);
+        }
+
+        if (clientChanged) {
+            client.setUpdatedAt(LocalDateTime.now());
+            clientRepository.save(client);
+        }
+
+        return toResponse(getAuthenticatedUser(session));
+    }
+
+    @Transactional
+    @Override
+    public String uploadProfileImage(HttpSession session, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file is required");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.toLowerCase().startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only image files are allowed");
+        }
+
+        UserAccount userAccount = getAuthenticatedUser(session);
+        if (userAccount.getClientId() == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only client accounts can update this profile");
+        }
+
+        Client client = clientRepository.findById(userAccount.getClientId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found"));
+
+        ensureUploadDirectory();
+
+        String originalName = file.getOriginalFilename() == null ? "profile" : file.getOriginalFilename();
+        String extension = extractExtension(originalName);
+        String safeFileName = "client-" + client.getClientId() + "-" + System.currentTimeMillis() + extension;
+        Path targetFile = profileImagesDir.resolve(safeFileName).normalize();
+
+        try {
+            Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store profile image", ex);
+        }
+
+        String relativePath = "/" + profileImagesDir.getFileName() + "/" + safeFileName;
+        client.setProfileImageUrl(relativePath);
+        client.setUpdatedAt(LocalDateTime.now());
+        clientRepository.save(client);
+        return relativePath;
+    }
+
+    @Override
     public List<UserResponse> findByRoleId(Integer roleId) {
         List<Integer> userIds = userRoleRepository.findUserIdsByRoleId(roleId);
         if (userIds.isEmpty()) {
@@ -256,6 +372,29 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    private UserAccount getAuthenticatedUser(HttpSession session) {
+        if (session == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Session is required");
+        }
+
+        Object sessionUserId = session.getAttribute(SESSION_USER_ID);
+        if (!(sessionUserId instanceof Integer userId)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User session is not available");
+        }
+
+        return userAccountRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User session is not valid"));
+    }
+
+    private boolean matchesCurrentPassword(UserAccount userAccount, String currentPassword) {
+        if (currentPassword == null || currentPassword.isBlank()) {
+            return false;
+        }
+
+        String roleCredential = resolveRoleCredential(userAccount);
+        return matchesCredential(currentPassword, userAccount.getPasswordHash()) || matchesCredential(currentPassword, roleCredential);
+    }
+
     private String resolveUserType(UserUpsertRequest request) {
         if (request.getUserType() != null && !request.getUserType().isBlank()) {
             return request.getUserType().trim().toUpperCase();
@@ -310,8 +449,10 @@ public class UserServiceImpl implements UserService {
         client.setCompanyName(clientForm.getCompanyName());
         client.setTaxId(clientForm.getTaxId());
         client.setCountry(clientForm.getCountry());
+        client.setPhone(clientForm.getPhone());
         client.setAddress(clientForm.getAddress());
         client.setEmail(clientForm.getEmail());
+        client.setProfileImageUrl(clientForm.getProfileImageUrl());
         client.setCreditLimit(clientForm.getCreditLimit() != null ? clientForm.getCreditLimit() : BigDecimal.ZERO);
         client.setActive(clientForm.getActive() == null ? Boolean.TRUE : clientForm.getActive());
         client.setCreatedAt(LocalDateTime.now());
@@ -362,8 +503,10 @@ public class UserServiceImpl implements UserService {
         client.setCompanyName(clientForm.getCompanyName());
         client.setTaxId(clientForm.getTaxId());
         client.setCountry(clientForm.getCountry());
+        client.setPhone(clientForm.getPhone());
         client.setAddress(clientForm.getAddress());
         client.setEmail(clientForm.getEmail());
+        client.setProfileImageUrl(clientForm.getProfileImageUrl());
         client.setCreditLimit(clientForm.getCreditLimit() != null ? clientForm.getCreditLimit() : BigDecimal.ZERO);
         client.setActive(clientForm.getActive() == null ? Boolean.TRUE : clientForm.getActive());
         client.setUpdatedAt(LocalDateTime.now());
@@ -439,8 +582,10 @@ public class UserServiceImpl implements UserService {
         form.setCompanyName(client.getCompanyName());
         form.setTaxId(client.getTaxId());
         form.setCountry(client.getCountry());
+        form.setPhone(client.getPhone());
         form.setAddress(client.getAddress());
         form.setEmail(client.getEmail());
+        form.setProfileImageUrl(client.getProfileImageUrl());
         form.setCreditLimit(client.getCreditLimit());
         form.setActive(client.getActive());
         form.setCreatedAt(client.getCreatedAt());
@@ -489,5 +634,23 @@ public class UserServiceImpl implements UserService {
         } catch (IllegalArgumentException ex) {
             return false;
         }
+    }
+
+    private void ensureUploadDirectory() {
+        try {
+            Files.createDirectories(profileImagesDir);
+        } catch (IOException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not create upload directory", ex);
+        }
+    }
+
+    private String extractExtension(String originalName) {
+        int lastDot = originalName.lastIndexOf('.');
+        if (lastDot < 0 || lastDot == originalName.length() - 1) {
+            return "";
+        }
+
+        String extension = originalName.substring(lastDot).toLowerCase();
+        return extension.length() <= 10 ? extension : "";
     }
 }

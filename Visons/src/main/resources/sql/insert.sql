@@ -85,9 +85,9 @@ GO
 --------------------------------------------------
 -- CLIENTS (SEED PARA LOGIN DE CLIENTE)
 --------------------------------------------------
-INSERT INTO CLIENTS (company_name, tax_id, country, address, email, credit_limit, is_active, created_at)
+INSERT INTO CLIENTS (company_name, tax_id, country, phone, address, email, profile_image_url, credit_limit, is_active, created_at)
 VALUES
-('AgroExport S.A.C.', '20601234567', 'Perú', 'Av. Industrial 456, Ica', 'cliente@agroexport.pe', 25000.00, 1, GETDATE());
+('AgroExport S.A.C.', '20601234567', 'Perú', NULL, 'Av. Industrial 456, Ica', 'cliente@agroexport.pe', NULL, 25000.00, 1, GETDATE());
 
 DECLARE @ClientId INT = SCOPE_IDENTITY();
 

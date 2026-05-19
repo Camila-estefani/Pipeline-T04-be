@@ -64,6 +64,9 @@ public class CustomerServiceImpl implements CustomerService {
             if (customerDetails.getCountry() != null) {
                 customer.setCountry(customerDetails.getCountry());
             }
+            if (customerDetails.getPhone() != null) {
+                customer.setPhone(customerDetails.getPhone());
+            }
             if (customerDetails.getAddress() != null) {
                 customer.setAddress(customerDetails.getAddress());
             }
@@ -73,6 +76,8 @@ public class CustomerServiceImpl implements CustomerService {
             if (customerDetails.getCreditLimit() != null) {
                 customer.setCreditLimit(customerDetails.getCreditLimit());
             }
+            System.out.println("Customer update phone request: " + customerDetails.getPhone());
+            System.out.println("Customer update phone entity: " + customer.getPhone());
             customer.setUpdatedAt(LocalDateTime.now());
             return customerRepository.save(customer);
         }
