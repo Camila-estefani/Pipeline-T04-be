@@ -9,6 +9,8 @@ public interface ProviderService {
 
     List<Provider> findAll();
 
+    List<Provider> findAllIncludingInactive();
+
     List<Provider> findByState(String state);
 
     Optional<Provider> findById(Integer id);

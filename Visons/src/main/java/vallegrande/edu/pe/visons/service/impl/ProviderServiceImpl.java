@@ -29,6 +29,11 @@ public class ProviderServiceImpl implements ProviderService {
     }
 
     @Override
+    public List<Provider> findAllIncludingInactive() {
+        return providerRepository.findAll();
+    }
+
+    @Override
     public List<Provider> findByState(String state) {
         boolean active = "A".equalsIgnoreCase(state) || "1".equals(state) || "true".equalsIgnoreCase(state);
         return providerRepository.findByIsActive(active);
