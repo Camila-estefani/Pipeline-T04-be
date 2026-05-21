@@ -1,5 +1,5 @@
-# docker-compose -f docker-compose-db.yml up -d
-# docker-compose -f docker-compose-db.yml down
+# docker compose -f docker-compose-db.yml up -d
+# docker compose -f docker-compose-db.yml down
 
 services:
   mssql-server:
@@ -17,7 +17,7 @@ services:
     networks:
       - visons-network
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Admin12345!", "-Q", "SELECT 1"]
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Admin12345!", "-Q", "SELECT 1", "-No", "-C"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -28,8 +28,7 @@ volumes:
   mssql_data:
     driver: local
 
-# CREAR UNA RED EN ESTE COMPOSE PARA QUE SEA COMPARTIDA
 networks:
   visons-network:
-    name: visons-network   # red compartida, visible desde ambos compose
+    name: visons-network
     driver: bridge
