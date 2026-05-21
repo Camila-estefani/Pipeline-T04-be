@@ -49,7 +49,7 @@ public class ProviderRest {
     @GetMapping("/summary")
     @Operation(summary = "Get Provider Summary", description = "Get Provider Summary with purchase metrics")
     public List<ProviderSummaryDTO> findSummary() {
-        List<Provider> providers = providerService.findAll();
+        List<Provider> providers = providerService.findAllIncludingInactive();
 
         Map<Integer, Long> totalPurchases = new LinkedHashMap<>();
         Map<Integer, Double> totalVolumeKg = new LinkedHashMap<>();
