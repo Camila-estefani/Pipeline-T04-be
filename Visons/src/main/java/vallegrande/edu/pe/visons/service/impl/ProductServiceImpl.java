@@ -41,6 +41,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product save(Product product) {
+        ensureUniqueProduct(null, product);
         LocalDateTime now = LocalDateTime.now();
         product.setProductId(null);
         product.setIsActive(true);
@@ -62,6 +63,7 @@ public class ProductServiceImpl implements ProductService {
         Optional<Product> existingProduct = productRepository.findById(id);
         if (existingProduct.isPresent()) {
             Product product = existingProduct.get();
+            ensureUniqueProduct(id, productDetails);
             if (productDetails.getCategoryId() != null) {
                 product.setCategoryId(productDetails.getCategoryId());
             }
@@ -87,6 +89,16 @@ public class ProductServiceImpl implements ProductService {
             return productRepository.save(product);
         }
         throw new RuntimeException("Producto no encontrado");
+    }
+
+    private void ensureUniqueProduct(Integer currentId, Product product) {
+        if (product == null || product.getCategoryId() == null || product.getName() == null || product.getName().isBlank()) {
+            return;
+        }
+
+        productRepository.findByCategoryIdAndNameIgnoreCase(product.getCategoryId(), product.getName().trim())
+                .filter(existing -> currentId == null || !existing.getProductId().equals(currentId))
+                .ifPresent(existing -> { throw new RuntimeException("Ya existe un producto con ese nombre en la categoría seleccionada"); });
     }
 
     @Override

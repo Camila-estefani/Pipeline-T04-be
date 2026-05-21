@@ -18,8 +18,21 @@ services:
       DB_URL: "jdbc:sqlserver://mssql-server:1433;databaseName=Visons;encrypt=true;trustServerCertificate=true"
       DB_USER: "sa"
       DB_PASSWORD: "Admin12345!"
+      DB_DRIVER: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
       PORT: "8080"
       SERVER_URL: "http://localhost:8080"
+
+      MAIL_HOST: "smtp.gmail.com"
+      MAIL_PORT: "587"
+
+      MAIL_USERNAME: "lizeth.quispe@vallegrande.edu.pe"
+      MAIL_PASSWORD: "fecpfmmawlxxdcua"
+
+      MAIL_SMTP_AUTH: "true"
+      MAIL_SMTP_STARTTLS: "true"
+
+      MAIL_FROM: "lizeth.quispe@vallegrande.edu.pe"
+
     networks:
       - visons-network
     restart: on-failure

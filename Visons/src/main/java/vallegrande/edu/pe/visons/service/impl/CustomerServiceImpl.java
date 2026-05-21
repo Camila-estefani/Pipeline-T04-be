@@ -41,6 +41,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer save(Customer customer) {
+        ensureUniqueCustomer(null, customer);
         LocalDateTime now = LocalDateTime.now();
         customer.setIsActive(true);
         customer.setCreatedAt(now);
@@ -55,6 +56,7 @@ public class CustomerServiceImpl implements CustomerService {
         Optional<Customer> existingCustomer = customerRepository.findById(id);
         if (existingCustomer.isPresent()) {
             Customer customer = existingCustomer.get();
+            ensureUniqueCustomer(id, customerDetails);
             if (customerDetails.getCompanyName() != null) {
                 customer.setCompanyName(customerDetails.getCompanyName());
             }
@@ -82,6 +84,24 @@ public class CustomerServiceImpl implements CustomerService {
             return customerRepository.save(customer);
         }
         throw new RuntimeException("Cliente no encontrado");
+    }
+
+    private void ensureUniqueCustomer(Integer currentId, Customer customer) {
+        if (customer == null) {
+            throw new RuntimeException("Cliente inválido");
+        }
+
+        if (customer.getTaxId() != null && !customer.getTaxId().isBlank()) {
+            customerRepository.findByTaxIdIgnoreCase(customer.getTaxId().trim())
+                    .filter(existing -> currentId == null || !existing.getClientId().equals(currentId))
+                    .ifPresent(existing -> { throw new RuntimeException("El RUC/TAX ID ya está registrado"); });
+        }
+
+        if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
+            customerRepository.findByEmailIgnoreCase(customer.getEmail().trim())
+                    .filter(existing -> currentId == null || !existing.getClientId().equals(currentId))
+                    .ifPresent(existing -> { throw new RuntimeException("El correo ya está registrado"); });
+        }
     }
 
     @Override

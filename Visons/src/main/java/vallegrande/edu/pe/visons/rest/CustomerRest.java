@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import vallegrande.edu.pe.visons.model.Customer;
@@ -50,13 +51,13 @@ public class CustomerRest {
 
     @PostMapping("/save")
     @Operation(summary = "Crear (POST) - (fecha-hora)", description = "Save Customer")
-    public Customer save(@RequestBody Customer customer) {
+    public Customer save(@Valid @RequestBody Customer customer) {
         return customerService.save(customer);
     }
 
     @PutMapping("/update/{id}")
     @Operation(summary = "Editar (PUT) - (fecha-hora)", description = "Update Customer")
-    public Customer update(@PathVariable Integer id, @RequestBody Customer customer) {
+    public Customer update(@PathVariable Integer id, @Valid @RequestBody Customer customer) {
         return customerService.update(id, customer);
     }
     @PatchMapping("/{id}")

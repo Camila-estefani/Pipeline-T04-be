@@ -5,14 +5,18 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import vallegrande.edu.pe.visons.dto.ClientRequestActionRequest;
+import vallegrande.edu.pe.visons.dto.ClientRequestActionResponse;
 import vallegrande.edu.pe.visons.model.ClientRequest;
 import vallegrande.edu.pe.visons.service.ClientRequestService;
 
@@ -46,9 +50,23 @@ public class ClientRequestRest {
         return clientRequestService.findById(id);
     }
 
+    @PatchMapping("/{id}/approve")
+    @Operation(summary = "Approve Client Request", description = "Approve a client registration request and create the client and login user")
+    public ClientRequestActionResponse approve(@PathVariable Integer id,
+            @RequestBody(required = false) ClientRequestActionRequest request) {
+        return clientRequestService.approveRequest(id, request);
+    }
+
+    @PatchMapping("/{id}/reject")
+    @Operation(summary = "Reject Client Request", description = "Reject a client registration request without creating customer records")
+    public ClientRequestActionResponse reject(@PathVariable Integer id,
+            @RequestBody(required = false) ClientRequestActionRequest request) {
+        return clientRequestService.rejectRequest(id, request);
+    }
+
     @PostMapping("/save")
     @Operation(summary = "Submit Client Request (POST)", description = "Submit a new client registration request from the landing page")
-    public ClientRequest save(@RequestBody ClientRequest clientRequest) {
+    public ClientRequest save(@Valid @RequestBody ClientRequest clientRequest) {
         return clientRequestService.save(clientRequest);
     }
 }

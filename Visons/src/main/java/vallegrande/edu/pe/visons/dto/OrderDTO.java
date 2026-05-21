@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class OrderDTO {
@@ -14,12 +16,17 @@ public class OrderDTO {
     private Integer clientId;
 
     @NotBlank(message = "orderCode es requerido")
+    @Size(min = 3, max = 50, message = "orderCode debe tener entre 3 y 50 caracteres")
     private String orderCode;
 
     @NotNull(message = "orderDate es requerido")
     private LocalDate orderDate;
 
+    @Pattern(regexp = "^(EXW|FOB|CIF)$", message = "incoterm debe ser EXW, FOB o CIF")
     private String incoterm;
+
+    @NotBlank(message = "status es requerido")
+    @Size(max = 50, message = "status debe tener como máximo 50 caracteres")
     private String status;
 
     public OrderDTO() {

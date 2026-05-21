@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse save(UserUpsertRequest request) {
         validateCreateRequest(request);
 
-        if (userAccountRepository.findByUsername(request.getUsername()).isPresent()) {
+        if (userAccountRepository.findByUsernameIgnoreCase(request.getUsername().trim()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
 
@@ -129,7 +129,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
 
         if (request.getUsername() != null && !request.getUsername().isBlank()) {
-            Optional<UserAccount> duplicate = userAccountRepository.findByUsername(request.getUsername().trim());
+            Optional<UserAccount> duplicate = userAccountRepository.findByUsernameIgnoreCase(request.getUsername().trim());
             if (duplicate.isPresent() && !duplicate.get().getUserId().equals(id)) {
                 throw new RuntimeException("Username already exists");
             }
@@ -359,6 +359,8 @@ public class UserServiceImpl implements UserService {
         if (resolveUserType(request) == null) {
             throw new RuntimeException("User type is required");
         }
+
+        validateUniqueNestedAccounts(null, request);
     }
 
     private void validateLoginRequest(AuthLoginRequest request) {
@@ -422,6 +424,8 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Worker information is required");
         }
 
+        ensureUniqueWorker(null, workerForm);
+
         Worker worker = new Worker();
         worker.setFirstName(workerForm.getFirstName());
         worker.setLastName(workerForm.getLastName());
@@ -446,6 +450,8 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Client information is required");
         }
 
+        ensureUniqueClient(null, clientForm);
+
         Client client = new Client();
         client.setCompanyName(clientForm.getCompanyName());
         client.setTaxId(clientForm.getTaxId());
@@ -469,6 +475,8 @@ public class UserServiceImpl implements UserService {
             return workerRepository.findById(workerId)
                     .orElseThrow(() -> new RuntimeException("Worker not found with ID: " + workerId));
         }
+
+        ensureUniqueWorker(workerId, workerForm);
 
         Worker worker = workerId != null ? workerRepository.findById(workerId).orElse(new Worker()) : new Worker();
         worker.setFirstName(workerForm.getFirstName());
@@ -499,6 +507,8 @@ public class UserServiceImpl implements UserService {
             return clientRepository.findById(clientId)
                     .orElseThrow(() -> new RuntimeException("Client not found with ID: " + clientId));
         }
+
+        ensureUniqueClient(clientId, clientForm);
 
         Client client = clientId != null ? clientRepository.findById(clientId).orElse(new Client()) : new Client();
         client.setCompanyName(clientForm.getCompanyName());
@@ -653,5 +663,55 @@ public class UserServiceImpl implements UserService {
 
         String extension = originalName.substring(lastDot).toLowerCase();
         return extension.length() <= 10 ? extension : "";
+    }
+
+    private void validateUniqueNestedAccounts(Integer currentUserId, UserUpsertRequest request) {
+        if (request == null) {
+            return;
+        }
+
+        if (request.getWorker() != null) {
+            ensureUniqueWorker(request.getWorker().getWorkerId(), request.getWorker());
+        }
+
+        if (request.getClient() != null) {
+            ensureUniqueClient(request.getClient().getClientId(), request.getClient());
+        }
+    }
+
+    private void ensureUniqueWorker(Integer currentWorkerId, WorkerForm workerForm) {
+        if (workerForm == null) {
+            return;
+        }
+
+        if (workerForm.getDocumentNumber() != null && !workerForm.getDocumentNumber().isBlank()) {
+            workerRepository.findByDocumentNumber(workerForm.getDocumentNumber().trim())
+                    .filter(existing -> currentWorkerId == null || !existing.getWorkerId().equals(currentWorkerId))
+                    .ifPresent(existing -> { throw new RuntimeException("El DNI/documento del trabajador ya existe"); });
+        }
+
+        if (workerForm.getEmail() != null && !workerForm.getEmail().isBlank()) {
+            workerRepository.findByEmailIgnoreCase(workerForm.getEmail().trim())
+                    .filter(existing -> currentWorkerId == null || !existing.getWorkerId().equals(currentWorkerId))
+                    .ifPresent(existing -> { throw new RuntimeException("El correo del trabajador ya existe"); });
+        }
+    }
+
+    private void ensureUniqueClient(Integer currentClientId, ClientForm clientForm) {
+        if (clientForm == null) {
+            return;
+        }
+
+        if (clientForm.getTaxId() != null && !clientForm.getTaxId().isBlank()) {
+            clientRepository.findByTaxIdIgnoreCase(clientForm.getTaxId().trim())
+                    .filter(existing -> currentClientId == null || !existing.getClientId().equals(currentClientId))
+                    .ifPresent(existing -> { throw new RuntimeException("El RUC/TAX ID del cliente ya existe"); });
+        }
+
+        if (clientForm.getEmail() != null && !clientForm.getEmail().isBlank()) {
+            clientRepository.findByEmailIgnoreCase(clientForm.getEmail().trim())
+                    .filter(existing -> currentClientId == null || !existing.getClientId().equals(currentClientId))
+                    .ifPresent(existing -> { throw new RuntimeException("El correo del cliente ya existe"); });
+        }
     }
 }

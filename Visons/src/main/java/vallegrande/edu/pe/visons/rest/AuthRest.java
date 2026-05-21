@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import vallegrande.edu.pe.visons.dto.AuthLoginRequest;
@@ -33,7 +34,7 @@ public class AuthRest {
     }
 
     @PostMapping("/login")
-    public UserResponse login(@RequestBody AuthLoginRequest request, HttpSession session) {
+    public UserResponse login(@Valid @RequestBody AuthLoginRequest request, HttpSession session) {
         UserResponse response = userService.authenticate(request);
         session.setAttribute(SESSION_USER_ID, response.getUserId());
         return response;
@@ -45,7 +46,7 @@ public class AuthRest {
     }
 
     @PutMapping("/me")
-    public UserResponse updateCurrentUser(@RequestBody ClientProfileUpdateRequest request, HttpSession session) {
+    public UserResponse updateCurrentUser(@Valid @RequestBody ClientProfileUpdateRequest request, HttpSession session) {
         return userService.updateCurrentClientProfile(session, request);
     }
 

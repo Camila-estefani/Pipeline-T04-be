@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import vallegrande.edu.pe.visons.dto.RoleResponse;
 import vallegrande.edu.pe.visons.dto.UserResponse;
 import vallegrande.edu.pe.visons.dto.UserRoleRequest;
@@ -41,12 +42,12 @@ public class UserRest {
     }
 
     @PostMapping
-    public UserResponse save(@RequestBody UserUpsertRequest request) {
+    public UserResponse save(@Valid @RequestBody UserUpsertRequest request) {
         return userService.save(request);
     }
 
     @PutMapping("/{id}")
-    public UserResponse update(@PathVariable Integer id, @RequestBody UserUpsertRequest request) {
+    public UserResponse update(@PathVariable Integer id, @Valid @RequestBody UserUpsertRequest request) {
         return userService.update(id, request);
     }
 
@@ -61,7 +62,7 @@ public class UserRest {
     }
 
     @PostMapping("/{id}/roles")
-    public UserResponse assignRole(@PathVariable Integer id, @RequestBody UserRoleRequest request) {
+    public UserResponse assignRole(@PathVariable Integer id, @Valid @RequestBody UserRoleRequest request) {
         return userService.assignRole(id, request);
     }
 

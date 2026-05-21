@@ -41,6 +41,7 @@ public class ProviderServiceImpl implements ProviderService {
 
     @Override
     public Provider save(Provider provider) {
+        ensureUniqueProvider(null, provider);
         LocalDateTime now = LocalDateTime.now();
         provider.setProviderId(null);
         provider.setIsActive(true);
@@ -57,6 +58,7 @@ public class ProviderServiceImpl implements ProviderService {
     public Provider update(Integer id, Provider provider) {
         Provider existing = providerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Provider not found with ID: " + id));
+        ensureUniqueProvider(id, provider);
         existing.setCompanyName(provider.getCompanyName());
         existing.setTaxId(provider.getTaxId());
         existing.setProductType(provider.getProductType());
@@ -66,6 +68,24 @@ public class ProviderServiceImpl implements ProviderService {
         existing.setUpdatedBy(provider.getUpdatedBy() != null ? provider.getUpdatedBy() : "SYSTEM");
         existing.setUpdatedAt(LocalDateTime.now());
         return providerRepository.save(existing);
+    }
+
+    private void ensureUniqueProvider(Integer currentId, Provider provider) {
+        if (provider == null) {
+            throw new RuntimeException("Provider inválido");
+        }
+
+        if (provider.getTaxId() != null && !provider.getTaxId().isBlank()) {
+            providerRepository.findByTaxIdIgnoreCase(provider.getTaxId().trim())
+                    .filter(existing -> currentId == null || !existing.getProviderId().equals(currentId))
+                    .ifPresent(existing -> { throw new RuntimeException("El RUC/TAX ID del proveedor ya existe"); });
+        }
+
+        if (provider.getContactEmail() != null && !provider.getContactEmail().isBlank()) {
+            providerRepository.findByContactEmailIgnoreCase(provider.getContactEmail().trim())
+                    .filter(existing -> currentId == null || !existing.getProviderId().equals(currentId))
+                    .ifPresent(existing -> { throw new RuntimeException("El correo de contacto del proveedor ya existe"); });
+        }
     }
 
     @Override

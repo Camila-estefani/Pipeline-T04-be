@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import vallegrande.edu.pe.visons.dto.OrderDTO;
 import vallegrande.edu.pe.visons.dto.OrderResponseDTO;
 import vallegrande.edu.pe.visons.model.Customer;
@@ -59,7 +60,7 @@ public class OrderRest {
     }
 
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody OrderDTO orderDTO) {
+    public ResponseEntity<?> createOrder(@Valid @RequestBody OrderDTO orderDTO) {
         try {
             if (orderDTO == null || orderDTO.getClientId() == null) {
                 throw new RuntimeException("clientId es NULL");
@@ -75,6 +76,10 @@ public class OrderRest {
             }
             if (orderDTO.getOrderDate() == null) {
                 throw new RuntimeException("orderDate no puede ser NULL");
+            }
+
+            if (orderRepository.findByOrderCodeIgnoreCase(orderDTO.getOrderCode().trim()).isPresent()) {
+                throw new RuntimeException("El orderCode ya existe");
             }
 
             Order order = new Order();
@@ -101,7 +106,7 @@ public class OrderRest {
     }
 
     @PatchMapping("/update/{id}")
-    public ResponseEntity<?> updateOrder(@PathVariable Integer id, @RequestBody OrderDTO orderDTO) {
+    public ResponseEntity<?> updateOrder(@PathVariable Integer id, @Valid @RequestBody OrderDTO orderDTO) {
         try {
             Optional<Order> orderOpt = orderRepository.findById(id);
             if (orderOpt.isEmpty()) {
@@ -111,6 +116,14 @@ public class OrderRest {
             Optional<Customer> customerOpt = customerRepository.findById(orderDTO.getClientId());
             if (customerOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Cliente no existe");
+            }
+
+            if (orderDTO.getOrderCode() != null && !orderDTO.getOrderCode().isBlank()) {
+                orderRepository.findByOrderCodeIgnoreCase(orderDTO.getOrderCode().trim())
+                        .filter(existing -> !existing.getOrderId().equals(id))
+                        .ifPresent(existing -> {
+                            throw new RuntimeException("El orderCode ya existe");
+                        });
             }
 
             Order order = orderOpt.get();

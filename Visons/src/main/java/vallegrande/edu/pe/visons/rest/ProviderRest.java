@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import vallegrande.edu.pe.visons.dto.ProviderSummaryDTO;
@@ -117,13 +118,13 @@ public class ProviderRest {
 
     @PostMapping("/save")
     @Operation(summary = "Crear (POST) - (fecha-hora)", description = "Save Provider")
-    public Provider save(@RequestBody Provider provider) {
+    public Provider save(@Valid @RequestBody Provider provider) {
         return providerService.save(provider);
     }
 
     @PutMapping("/update/{id}")
     @Operation(summary = "Editar (PUT) - (fecha-hora)", description = "Update Provider")
-    public Provider update(@PathVariable Integer id, @RequestBody Provider provider) {
+    public Provider update(@PathVariable Integer id, @Valid @RequestBody Provider provider) {
         return providerService.update(id, provider);
     }
     @PatchMapping("/{id}")
