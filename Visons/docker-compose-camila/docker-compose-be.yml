@@ -1,23 +1,34 @@
-# docker-compose -f Visons/docker-compose-camila/docker-compose-be.yml up -d
-# docker-compose -f Visons/docker-compose-camila/docker-compose-be.yml down
+# docker compose -f docker-compose-camila/docker-compose-be.yml up --build -d
+# docker compose -f docker-compose-camila/docker-compose-be.yml down
 
 version: '3.8'
 
 services:
   visons-app:
-    image: camila0814/mibackend:latest   # cambiar tagname según sea necesario
+    build:
+      context: ..
+      dockerfile: Dockerfile
+
+    image: camila0814/mibackend:latest
+
     container_name: visons-backend-camila
+
     ports:
       - "8080:8080"
+
     environment:
       DB_URL: "jdbc:sqlserver://mssql-server:1433;databaseName=Visons;encrypt=true;trustServerCertificate=true"
       DB_USER: "sa"
       DB_PASSWORD: "Admin12345!"
+      DB_DRIVER: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
       PORT: "8080"
       SERVER_URL: "http://localhost:8080"
+
     networks:
       - visons-network
+
     restart: on-failure
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/swagger-ui.html"]
       interval: 30s
@@ -25,7 +36,6 @@ services:
       retries: 10
       start_period: 180s
 
-# CONSUMIR UNA RED EXISTENTE CREADA POR OTRO COMPOSE
 networks:
   visons-network:
-    external: true   # usa la red creada por el compose de la base de datos
+    external: true
