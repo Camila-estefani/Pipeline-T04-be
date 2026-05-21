@@ -3,6 +3,7 @@ package vallegrande.edu.pe.visons.rest;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,15 +21,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 import vallegrande.edu.pe.visons.dto.OrderDTO;
 import vallegrande.edu.pe.visons.dto.OrderResponseDTO;
+import vallegrande.edu.pe.visons.dto.UserResponse;
 import vallegrande.edu.pe.visons.model.Customer;
 import vallegrande.edu.pe.visons.model.Order;
 import vallegrande.edu.pe.visons.repository.CustomerRepository;
 import vallegrande.edu.pe.visons.repository.OrderRepository;
 import vallegrande.edu.pe.visons.service.OrderPdfService;
+import vallegrande.edu.pe.visons.service.UserService;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -46,9 +52,12 @@ public class OrderRest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping
     public List<OrderResponseDTO> getAllOrders() {
-        List<Order> orders = orderRepository.findAll();
+        List<Order> orders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
         return orders.stream().map(order -> new OrderResponseDTO(
                 order.getOrderId(),
                 order.getCustomer().getClientId(),
@@ -57,6 +66,59 @@ public class OrderRest {
                 order.getOrderDate(),
                 order.getIncoterm(),
                 order.getStatus())).collect(Collectors.toList());
+    }
+
+    @GetMapping("/my")
+    public List<OrderResponseDTO> getMyOrders(HttpSession session) {
+        List<Order> accessibleOrders = resolveAccessibleOrders(session);
+        return accessibleOrders.stream().map(order -> new OrderResponseDTO(
+                order.getOrderId(),
+                order.getCustomer().getClientId(),
+                order.getCustomer().getCompanyName(),
+                order.getOrderCode(),
+                order.getOrderDate(),
+                order.getIncoterm(),
+                order.getStatus())).collect(Collectors.toList());
+    }
+
+    @GetMapping("/pending")
+    public List<OrderResponseDTO> getPendingOrders(HttpSession session) {
+        return resolveAccessibleOrders(session).stream()
+                .filter(order -> "pending".equalsIgnoreCase(order.getStatus()))
+                .map(order -> new OrderResponseDTO(
+                        order.getOrderId(),
+                        order.getCustomer().getClientId(),
+                        order.getCustomer().getCompanyName(),
+                        order.getOrderCode(),
+                        order.getOrderDate(),
+                        order.getIncoterm(),
+                        order.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable Integer id, HttpSession session) {
+        Order order = findAccessibleOrder(id, session);
+        return ResponseEntity.ok(new OrderResponseDTO(
+                order.getOrderId(),
+                order.getCustomer().getClientId(),
+                order.getCustomer().getCompanyName(),
+                order.getOrderCode(),
+                order.getOrderDate(),
+                order.getIncoterm(),
+                order.getStatus()));
+    }
+
+    @PatchMapping("/{id}/accept")
+    public ResponseEntity<OrderResponseDTO> acceptOrder(@PathVariable Integer id, HttpSession session) {
+        Order updated = updateOrderStatus(id, session, "Processing");
+        return ResponseEntity.ok(toResponse(updated));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<OrderResponseDTO> rejectOrder(@PathVariable Integer id, HttpSession session) {
+        Order updated = updateOrderStatus(id, session, "Cancelled");
+        return ResponseEntity.ok(toResponse(updated));
     }
 
     @PostMapping
@@ -164,7 +226,8 @@ public class OrderRest {
     }
 
     @GetMapping("/{id}/pdf")
-    public ResponseEntity<byte[]> downloadOrderPdf(@org.springframework.web.bind.annotation.PathVariable Integer id) throws Exception {
+    public ResponseEntity<byte[]> downloadOrderPdf(@PathVariable Integer id, HttpSession session) throws Exception {
+        findAccessibleOrder(id, session);
         byte[] pdf = orderPdfService.generateOrderPdf(id);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -179,5 +242,56 @@ public class OrderRest {
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", "orders_report.pdf");
         return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+    }
+
+    private Order findAccessibleOrder(Integer orderId, HttpSession session) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
+
+        UserResponse currentUser = userService.currentSessionUser(session);
+        if (isClient(currentUser) && currentUser.getClientId() != null) {
+            Integer orderClientId = order.getCustomer() != null ? order.getCustomer().getClientId() : null;
+            if (orderClientId == null || !orderClientId.equals(currentUser.getClientId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para ver este pedido");
+            }
+        }
+
+        return order;
+    }
+
+    private Order updateOrderStatus(Integer orderId, HttpSession session, String newStatus) {
+        UserResponse currentUser = userService.currentSessionUser(session);
+        if (isClient(currentUser)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para procesar pedidos");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
+        order.setStatus(newStatus);
+        return orderRepository.save(order);
+    }
+
+    private List<Order> resolveAccessibleOrders(HttpSession session) {
+        UserResponse currentUser = userService.currentSessionUser(session);
+        if (!isClient(currentUser) || currentUser.getClientId() == null) {
+            return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
+        }
+        return orderRepository.findByCustomer_ClientIdOrderByOrderDateDesc(currentUser.getClientId());
+    }
+
+    private OrderResponseDTO toResponse(Order order) {
+        return new OrderResponseDTO(
+                order.getOrderId(),
+                order.getCustomer().getClientId(),
+                order.getCustomer().getCompanyName(),
+                order.getOrderCode(),
+                order.getOrderDate(),
+                order.getIncoterm(),
+                order.getStatus());
+    }
+
+    private boolean isClient(UserResponse user) {
+        String role = user == null ? null : user.getUserTypeName();
+        return role != null && role.equalsIgnoreCase("CLIENT");
     }
 }
