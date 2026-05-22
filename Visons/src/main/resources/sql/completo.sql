@@ -111,6 +111,7 @@ CREATE TABLE CLIENT_REQUESTS (
     last_name NVARCHAR(100) NOT NULL,
     company_name NVARCHAR(200) NULL,
     tax_id NVARCHAR(20) NULL,
+    country NVARCHAR(100) NULL,
     email NVARCHAR(150) NOT NULL,
     phone NVARCHAR(20) NULL,
     address NVARCHAR(MAX) NULL,
@@ -275,11 +276,17 @@ GO
 -- INDICES
 -- =========================================
 CREATE INDEX idx_products_name ON PRODUCTS(name);
+CREATE INDEX idx_products_state ON PRODUCTS(is_active);
+CREATE INDEX idx_products_category_state ON PRODUCTS(category_id, is_active);
 CREATE INDEX idx_purchases_provider ON PURCHASES(provider_id);
 CREATE INDEX idx_clients_company_name ON CLIENTS(company_name);
 CREATE INDEX idx_orders_client ON ORDERS(client_id);
+CREATE INDEX idx_orders_client_date ON ORDERS(client_id, order_date DESC);
+CREATE INDEX idx_orders_status_date ON ORDERS(status, order_date DESC);
+CREATE INDEX idx_orders_date ON ORDERS(order_date DESC);
 CREATE INDEX idx_order_details_order ON ORDER_DETAILS(order_id);
 CREATE INDEX idx_order_details_product ON ORDER_DETAILS(product_id);
+CREATE INDEX idx_client_requests_status_date ON CLIENT_REQUESTS(status, request_date DESC);
 GO
 
 -- =========================================
@@ -385,11 +392,11 @@ GO
 -- =========================================
 -- SEEDS: CLIENT_REQUESTS
 -- =========================================
-INSERT INTO CLIENT_REQUESTS (username, first_name, last_name, company_name, tax_id, email, phone, address, ubigeo_id, status, request_date, reviewed_by, comments)
+INSERT INTO CLIENT_REQUESTS (username, first_name, last_name, company_name, tax_id, country, email, phone, address, ubigeo_id, status, request_date, reviewed_by, comments)
 VALUES
-(N'solicitud.norte', N'Valeria', N'Campos', N'Agro Norte SAC',      N'20700123456', N'valeria@agronorte.pe', N'987111222', N'Av. Grau 150, Piura',     (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '200101'), N'Pending',  GETDATE(), NULL, NULL),
-(N'solicitud.sur',   N'Mateo',   N'Rojas',  N'Export Sur Andino',  N'20700123457', N'mateo@exportsur.pe',   N'987111223', N'Av. Ejercito 400, Cusco', (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '080101'), N'Approved', GETDATE(), 1,    N'Aprobado para pruebas'),
-(N'solicitud.lima',  N'Camila',  N'Vega',   N'Comercial Lima SAC', N'20700123458', N'camila@comlima.pe',    N'987111224', N'Av. Larco 900, Lima',     (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '150103'), N'Rejected', GETDATE(), 1,    N'Documentacion incompleta');
+(N'solicitud.norte', N'Valeria', N'Campos', N'Agro Norte SAC',      N'20700123456', N'Peru', N'valeria@agronorte.pe', N'987111222', N'Av. Grau 150, Piura',     (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '200101'), N'Pending',  GETDATE(), NULL, NULL),
+(N'solicitud.sur',   N'Mateo',   N'Rojas',  N'Export Sur Andino',  N'20700123457', N'Peru', N'mateo@exportsur.pe',   N'987111223', N'Av. Ejercito 400, Cusco', (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '080101'), N'Approved', GETDATE(), 1,    N'Aprobado para pruebas'),
+(N'solicitud.lima',  N'Camila',  N'Vega',   N'Comercial Lima SAC', N'20700123458', N'Peru', N'camila@comlima.pe',    N'987111224', N'Av. Larco 900, Lima',     (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '150103'), N'Rejected', GETDATE(), 1,    N'Documentacion incompleta');
 GO
 
 -- =========================================

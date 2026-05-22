@@ -77,6 +77,7 @@ CREATE TABLE CLIENT_REQUESTS (
     last_name NVARCHAR(100) NOT NULL,
     company_name NVARCHAR(200) NULL,
     tax_id NVARCHAR(20) NULL,
+    country NVARCHAR(100) NULL,
     email NVARCHAR(150) NOT NULL,
     phone NVARCHAR(20) NULL,
     address NVARCHAR(MAX) NULL,
@@ -242,6 +243,35 @@ CREATE TABLE AUDIT_LOG (
 CREATE INDEX idx_products_name
 ON PRODUCTS(name);
 
+CREATE INDEX idx_products_state
+ON PRODUCTS(is_active);
+
+CREATE INDEX idx_products_category_state
+ON PRODUCTS(category_id, is_active);
+
 --Indice Tabla Transaccional: PURCHASES--
 CREATE INDEX idx_purchases_provider
 ON PURCHASES(provider_id);
+
+--Indices para consultas frecuentes de pedidos--
+CREATE INDEX idx_orders_client
+ON ORDERS(client_id);
+
+CREATE INDEX idx_orders_client_date
+ON ORDERS(client_id, order_date DESC);
+
+CREATE INDEX idx_orders_status_date
+ON ORDERS(status, order_date DESC);
+
+CREATE INDEX idx_orders_date
+ON ORDERS(order_date DESC);
+
+CREATE INDEX idx_order_details_order
+ON ORDER_DETAILS(order_id);
+
+CREATE INDEX idx_order_details_product
+ON ORDER_DETAILS(product_id);
+
+--Indice para bandeja de solicitudes de clientes--
+CREATE INDEX idx_client_requests_status_date
+ON CLIENT_REQUESTS(status, request_date DESC);

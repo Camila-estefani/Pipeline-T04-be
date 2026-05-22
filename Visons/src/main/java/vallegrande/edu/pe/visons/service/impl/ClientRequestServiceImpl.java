@@ -91,6 +91,7 @@ public class ClientRequestServiceImpl implements ClientRequestService {
     @Transactional
     public ClientRequest save(ClientRequest clientRequest) {
         ensureUniqueClientRequest(clientRequest);
+        clientRequest.setCountry(requireText(clientRequest.getCountry(), "country"));
         clientRequest.setRequestId(null);
         clientRequest.setStatus(STATUS_PENDING);
         clientRequest.setRequestDate(LocalDateTime.now());
@@ -105,6 +106,11 @@ public class ClientRequestServiceImpl implements ClientRequestService {
         ClientRequest clientRequest = getPendingRequest(id);
         String companyName = requireText(clientRequest.getCompanyName(), "companyName");
         String taxId = requireText(clientRequest.getTaxId(), "taxId");
+        String country = normalizeNullable(clientRequest.getCountry());
+        if (country == null) {
+            country = "Peru";
+            clientRequest.setCountry(country);
+        }
         String email = requireText(clientRequest.getEmail(), "email");
         String phone = normalizeNullable(clientRequest.getPhone());
         String address = normalizeNullable(clientRequest.getAddress());
@@ -114,6 +120,7 @@ public class ClientRequestServiceImpl implements ClientRequestService {
         Client client = new Client();
         client.setCompanyName(companyName);
         client.setTaxId(taxId);
+        client.setCountry(country);
         client.setPhone(phone);
         client.setAddress(address);
         client.setEmail(email);

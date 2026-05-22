@@ -242,6 +242,10 @@ public class UserServiceImpl implements UserService {
             client.setAddress(request.getAddress().trim().isBlank() ? null : request.getAddress().trim());
             clientChanged = true;
         }
+        if (request.getCountry() != null) {
+            client.setCountry(request.getCountry().trim());
+            clientChanged = true;
+        }
         if (request.getProfileImageUrl() != null) {
             client.setProfileImageUrl(request.getProfileImageUrl().trim().isBlank() ? null : request.getProfileImageUrl().trim());
             clientChanged = true;

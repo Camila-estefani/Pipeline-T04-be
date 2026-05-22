@@ -51,6 +51,10 @@ public class ClientRequest {
     @Column(name = "tax_id", length = 20)
     private String taxId;
 
+    @Size(min = 2, max = 100, message = "country debe tener entre 2 y 100 caracteres")
+    @Column(name = "country", length = 100)
+    private String country;
+
     @NotBlank(message = "email es requerido")
     @Email(message = "email debe tener un formato válido")
     @Size(max = 150, message = "email debe tener como máximo 150 caracteres")

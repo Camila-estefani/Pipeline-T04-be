@@ -1,9 +1,12 @@
 package vallegrande.edu.pe.visons.dto;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -29,6 +32,8 @@ public class OrderDTO {
     @Size(max = 50, message = "status debe tener como máximo 50 caracteres")
     private String status;
 
+    private List<@Valid OrderDetailDTO> orderDetails = new ArrayList<>();
+
     public OrderDTO() {
     }
 
@@ -38,6 +43,11 @@ public class OrderDTO {
         this.orderDate = orderDate;
         this.incoterm = incoterm;
         this.status = status;
+    }
+
+    public OrderDTO(Integer clientId, String orderCode, LocalDate orderDate, String incoterm, String status, List<OrderDetailDTO> orderDetails) {
+        this(clientId, orderCode, orderDate, incoterm, status);
+        this.orderDetails = orderDetails == null ? new ArrayList<>() : orderDetails;
     }
 
     public Integer getClientId() {
@@ -80,6 +90,14 @@ public class OrderDTO {
         this.status = status;
     }
 
+    public List<OrderDetailDTO> getOrderDetails() {
+        return orderDetails;
+    }
+
+    public void setOrderDetails(List<OrderDetailDTO> orderDetails) {
+        this.orderDetails = orderDetails == null ? new ArrayList<>() : orderDetails;
+    }
+
     @Override
     public String toString() {
         return "OrderDTO{" +
@@ -88,6 +106,7 @@ public class OrderDTO {
                 ", orderDate=" + orderDate +
                 ", incoterm='" + incoterm + '\'' +
                 ", status='" + status + '\'' +
+                ", orderDetails=" + orderDetails +
                 '}';
     }
 }

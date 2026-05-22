@@ -1,17 +1,20 @@
 package vallegrande.edu.pe.visons.rest;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 import vallegrande.edu.pe.visons.dto.OrderDTO;
+import vallegrande.edu.pe.visons.dto.OrderDetailDTO;
 import vallegrande.edu.pe.visons.dto.OrderResponseDTO;
 import vallegrande.edu.pe.visons.dto.UserResponse;
 import vallegrande.edu.pe.visons.model.Customer;
@@ -39,6 +43,11 @@ import vallegrande.edu.pe.visons.service.UserService;
 @RequestMapping("/api/orders")
 @CrossOrigin(origins = "http://localhost:4200")
 public class OrderRest {
+
+    private static final String STATUS_PENDING = "Pending";
+    private static final String STATUS_PROCESSING = "Processing";
+    private static final String STATUS_COMPLETED = "Completed";
+    private static final String STATUS_CANCELLED = "Cancelled";
 
     @Autowired
     private OrderRepository orderRepository;
@@ -58,70 +67,43 @@ public class OrderRest {
     @GetMapping
     public List<OrderResponseDTO> getAllOrders() {
         List<Order> orders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
-        return orders.stream().map(order -> new OrderResponseDTO(
-                order.getOrderId(),
-                order.getCustomer().getClientId(),
-                order.getCustomer().getCompanyName(),
-                order.getOrderCode(),
-                order.getOrderDate(),
-                order.getIncoterm(),
-                order.getStatus())).collect(Collectors.toList());
+        return orders.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @GetMapping("/my")
     public List<OrderResponseDTO> getMyOrders(HttpSession session) {
         List<Order> accessibleOrders = resolveAccessibleOrders(session);
-        return accessibleOrders.stream().map(order -> new OrderResponseDTO(
-                order.getOrderId(),
-                order.getCustomer().getClientId(),
-                order.getCustomer().getCompanyName(),
-                order.getOrderCode(),
-                order.getOrderDate(),
-                order.getIncoterm(),
-                order.getStatus())).collect(Collectors.toList());
+        return accessibleOrders.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @GetMapping("/pending")
     public List<OrderResponseDTO> getPendingOrders(HttpSession session) {
         return resolveAccessibleOrders(session).stream()
-                .filter(order -> "pending".equalsIgnoreCase(order.getStatus()))
-                .map(order -> new OrderResponseDTO(
-                        order.getOrderId(),
-                        order.getCustomer().getClientId(),
-                        order.getCustomer().getCompanyName(),
-                        order.getOrderCode(),
-                        order.getOrderDate(),
-                        order.getIncoterm(),
-                        order.getStatus()))
+                .filter(order -> STATUS_PENDING.equals(normalizeStatus(order.getStatus())))
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable Integer id, HttpSession session) {
         Order order = findAccessibleOrder(id, session);
-        return ResponseEntity.ok(new OrderResponseDTO(
-                order.getOrderId(),
-                order.getCustomer().getClientId(),
-                order.getCustomer().getCompanyName(),
-                order.getOrderCode(),
-                order.getOrderDate(),
-                order.getIncoterm(),
-                order.getStatus()));
+        return ResponseEntity.ok(toResponse(order));
     }
 
     @PatchMapping("/{id}/accept")
     public ResponseEntity<OrderResponseDTO> acceptOrder(@PathVariable Integer id, HttpSession session) {
-        Order updated = updateOrderStatus(id, session, "Processing");
+        Order updated = updateOrderStatus(id, session, STATUS_PROCESSING);
         return ResponseEntity.ok(toResponse(updated));
     }
 
     @PatchMapping("/{id}/reject")
     public ResponseEntity<OrderResponseDTO> rejectOrder(@PathVariable Integer id, HttpSession session) {
-        Order updated = updateOrderStatus(id, session, "Cancelled");
+        Order updated = updateOrderStatus(id, session, STATUS_CANCELLED);
         return ResponseEntity.ok(toResponse(updated));
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderDTO orderDTO) {
         try {
             if (orderDTO == null || orderDTO.getClientId() == null) {
@@ -149,25 +131,19 @@ public class OrderRest {
             order.setOrderCode(orderDTO.getOrderCode());
             order.setOrderDate(orderDTO.getOrderDate());
             order.setIncoterm(orderDTO.getIncoterm());
-            order.setStatus(orderDTO.getStatus());
+            order.setStatus(normalizeStatus(orderDTO.getStatus()));
 
             Order savedOrder = orderRepository.save(order);
-            OrderResponseDTO responseDTO = new OrderResponseDTO(
-                    savedOrder.getOrderId(),
-                    savedOrder.getCustomer().getClientId(),
-                    savedOrder.getCustomer().getCompanyName(),
-                    savedOrder.getOrderCode(),
-                    savedOrder.getOrderDate(),
-                    savedOrder.getIncoterm(),
-                    savedOrder.getStatus());
+            saveOrderDetails(savedOrder.getOrderId(), orderDTO.getOrderDetails());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(savedOrder));
         } catch (Exception e) {
             throw e;
         }
     }
 
     @PatchMapping("/update/{id}")
+    @Transactional
     public ResponseEntity<?> updateOrder(@PathVariable Integer id, @Valid @RequestBody OrderDTO orderDTO) {
         try {
             Optional<Order> orderOpt = orderRepository.findById(id);
@@ -193,23 +169,18 @@ public class OrderRest {
             order.setOrderCode(orderDTO.getOrderCode());
             order.setOrderDate(orderDTO.getOrderDate());
             order.setIncoterm(orderDTO.getIncoterm());
-            order.setStatus(orderDTO.getStatus());
+            order.setStatus(normalizeStatus(orderDTO.getStatus()));
 
             Order savedOrder = orderRepository.save(order);
-            return ResponseEntity.ok(new OrderResponseDTO(
-                    savedOrder.getOrderId(),
-                    savedOrder.getCustomer().getClientId(),
-                    savedOrder.getCustomer().getCompanyName(),
-                    savedOrder.getOrderCode(),
-                    savedOrder.getOrderDate(),
-                    savedOrder.getIncoterm(),
-                    savedOrder.getStatus()));
+            replaceOrderDetails(savedOrder.getOrderId(), orderDTO.getOrderDetails());
+            return ResponseEntity.ok(toResponse(savedOrder));
         } catch (Exception e) {
             throw e;
         }
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public ResponseEntity<?> deleteOrder(@PathVariable Integer id) {
         try {
             Optional<Order> orderOpt = orderRepository.findById(id);
@@ -287,7 +258,88 @@ public class OrderRest {
                 order.getOrderCode(),
                 order.getOrderDate(),
                 order.getIncoterm(),
-                order.getStatus());
+                normalizeStatus(order.getStatus()),
+                findOrderDetails(order.getOrderId()));
+    }
+
+    private void replaceOrderDetails(Integer orderId, List<OrderDetailDTO> details) {
+        if (details == null || details.isEmpty()) {
+            return;
+        }
+
+        jdbcTemplate.update("DELETE FROM ORDER_DETAILS WHERE order_id = ?", orderId);
+        saveOrderDetails(orderId, details);
+    }
+
+    private void saveOrderDetails(Integer orderId, List<OrderDetailDTO> details) {
+        if (details == null || details.isEmpty()) {
+            return;
+        }
+
+        for (OrderDetailDTO detail : details) {
+            if (detail == null || detail.getProductId() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "productId es requerido en el detalle");
+            }
+
+            BigDecimal quantityKg = detail.getQuantityKg();
+            if (quantityKg == null || quantityKg.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "quantityKg debe ser mayor que 0");
+            }
+
+            BigDecimal unitPrice = detail.getUnitPrice() == null ? BigDecimal.ZERO : detail.getUnitPrice();
+            if (unitPrice.compareTo(BigDecimal.ZERO) < 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unitPrice debe ser mayor o igual a 0");
+            }
+
+            Integer productCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM PRODUCTS WHERE product_id = ?",
+                    Integer.class,
+                    detail.getProductId());
+
+            if (productCount == null || productCount == 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Producto con ID " + detail.getProductId() + " no existe");
+            }
+
+            jdbcTemplate.update(
+                    "INSERT INTO ORDER_DETAILS (order_id, product_id, quantity_kg, unit_price) VALUES (?, ?, ?, ?)",
+                    orderId,
+                    detail.getProductId(),
+                    quantityKg,
+                    unitPrice);
+        }
+    }
+
+    private List<OrderDetailDTO> findOrderDetails(Integer orderId) {
+        try {
+            String sql = "SELECT od.product_id, p.name AS product_name, od.quantity_kg, od.unit_price, "
+                    + "(od.quantity_kg * od.unit_price) AS line_total "
+                    + "FROM ORDER_DETAILS od JOIN PRODUCTS p ON od.product_id = p.product_id "
+                    + "WHERE od.order_id = ?";
+
+            return jdbcTemplate.query(sql, new Object[] { orderId }, (rs, rowNum) -> new OrderDetailDTO(
+                    rs.getInt("product_id"),
+                    rs.getString("product_name"),
+                    rs.getBigDecimal("quantity_kg"),
+                    rs.getBigDecimal("unit_price"),
+                    rs.getBigDecimal("line_total")));
+        } catch (DataAccessException ex) {
+            return new ArrayList<>();
+        }
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return STATUS_PENDING;
+        }
+
+        return switch (status.trim().toLowerCase()) {
+            case "pending", "pendiente" -> STATUS_PENDING;
+            case "processing", "procesado", "procesando", "en proceso" -> STATUS_PROCESSING;
+            case "completed", "complete", "completado", "entregado" -> STATUS_COMPLETED;
+            case "cancelled", "canceled", "cancelado", "denegado", "rechazado" -> STATUS_CANCELLED;
+            default -> status.trim();
+        };
     }
 
     private boolean isClient(UserResponse user) {

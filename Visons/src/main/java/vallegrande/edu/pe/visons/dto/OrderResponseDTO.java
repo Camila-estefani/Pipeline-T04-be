@@ -1,6 +1,8 @@
 package vallegrande.edu.pe.visons.dto;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OrderResponseDTO {
 
@@ -11,11 +13,16 @@ public class OrderResponseDTO {
     private LocalDate orderDate;
     private String incoterm;
     private String status;
+    private List<OrderDetailDTO> orderDetails = new ArrayList<>();
 
     public OrderResponseDTO() {
     }
 
     public OrderResponseDTO(Integer orderId, Integer clientId, String clientName, String orderCode, LocalDate orderDate, String incoterm, String status) {
+        this(orderId, clientId, clientName, orderCode, orderDate, incoterm, status, new ArrayList<>());
+    }
+
+    public OrderResponseDTO(Integer orderId, Integer clientId, String clientName, String orderCode, LocalDate orderDate, String incoterm, String status, List<OrderDetailDTO> orderDetails) {
         this.orderId = orderId;
         this.clientId = clientId;
         this.clientName = clientName;
@@ -23,6 +30,7 @@ public class OrderResponseDTO {
         this.orderDate = orderDate;
         this.incoterm = incoterm;
         this.status = status;
+        this.orderDetails = orderDetails == null ? new ArrayList<>() : orderDetails;
     }
 
     public Integer getOrderId() { return orderId; }
@@ -46,6 +54,9 @@ public class OrderResponseDTO {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public List<OrderDetailDTO> getOrderDetails() { return orderDetails; }
+    public void setOrderDetails(List<OrderDetailDTO> orderDetails) { this.orderDetails = orderDetails == null ? new ArrayList<>() : orderDetails; }
+
     @Override
     public String toString() {
         return "OrderResponseDTO{" +
@@ -56,6 +67,7 @@ public class OrderResponseDTO {
                 ", orderDate=" + orderDate +
                 ", incoterm='" + incoterm + '\'' +
                 ", status='" + status + '\'' +
+                ", orderDetails=" + orderDetails +
                 '}';
     }
 }
