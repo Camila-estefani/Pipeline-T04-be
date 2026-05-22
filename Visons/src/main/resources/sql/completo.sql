@@ -57,8 +57,16 @@ CREATE TABLE PRODUCTS (
     updated_at DATETIME NULL,
     deleted_at DATETIME NULL,
     restored_at DATETIME NULL,
+    
+    -- FK
     CONSTRAINT FK_PRODUCTS_CATEGORIES
-        FOREIGN KEY (category_id) REFERENCES CATEGORIES(category_id)
+        FOREIGN KEY (category_id) REFERENCES CATEGORIES(category_id),
+    -- UNIQUE: no productos repetidos
+    CONSTRAINT UQ_PRODUCTS_NAME UNIQUE (name),
+
+    -- CHECK: no valores negativos en peso
+    CONSTRAINT CK_PRODUCTS_BOX_WEIGHT
+        CHECK (box_weight_kg IS NULL OR box_weight_kg >= 0)
 );
 
 CREATE TABLE PROVIDERS (
