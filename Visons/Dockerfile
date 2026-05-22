@@ -18,7 +18,7 @@ WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 
 # Exponemos el puerto (ajústalo si usas otro)
-EXPOSE 9090
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
@@ -31,7 +31,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 # docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=Admin12345!" -p 1433:1433 --name mssql-server -d mcr.microsoft.com/mssql/server:2022-latest
 
 # 3. Ejecutar tu aplicación Spring Boot
-# docker run -d --name springboot-app -p 9090:9090 lizethquispesuarez/springboot-sqlserver:1.0
+# docker run -d --name springboot-app -p 8080:8080 lizethquispesuarez/springboot-sqlserver:1.0
 
 # 4. Subir tu imagen a DockerHub
 # docker push lizethquispesuarez/springboot-sqlserver:1.0

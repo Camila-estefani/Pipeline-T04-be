@@ -33,7 +33,6 @@ services:
 
       MAIL_FROM: "lizeth.quispe@vallegrande.edu.pe"
 
-      CLIENT_LOGIN_URL: "http://localhost:4200/login"
     networks:
       - visons-network
     restart: on-failure
