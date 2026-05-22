@@ -92,6 +92,9 @@ public class ProviderRest {
             dto.setCompanyName(provider.getCompanyName());
             dto.setTaxId(provider.getTaxId());
             dto.setProductType(provider.getProductType());
+            dto.setContactEmail(provider.getContactEmail());
+            dto.setContactPhone(provider.getContactPhone());
+            dto.setAddress(provider.getAddress());
             dto.setIsActive(provider.getIsActive());
             dto.setCreatedAt(provider.getCreatedAt());
             dto.setUpdatedAt(provider.getUpdatedAt());

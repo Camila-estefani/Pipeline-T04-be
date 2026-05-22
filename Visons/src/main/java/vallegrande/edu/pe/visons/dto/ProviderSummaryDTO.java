@@ -8,6 +8,9 @@ public class ProviderSummaryDTO {
     private String companyName;
     private String taxId;
     private String productType;
+    private String contactEmail;
+    private String contactPhone;
+    private String address;
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -25,6 +28,12 @@ public class ProviderSummaryDTO {
     public void setTaxId(String taxId) { this.taxId = taxId; }
     public String getProductType() { return productType; }
     public void setProductType(String productType) { this.productType = productType; }
+    public String getContactEmail() { return contactEmail; }
+    public void setContactEmail(String contactEmail) { this.contactEmail = contactEmail; }
+    public String getContactPhone() { return contactPhone; }
+    public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
     public LocalDateTime getCreatedAt() { return createdAt; }
