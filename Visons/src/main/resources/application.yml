@@ -2,17 +2,17 @@ spring:
   application:
     name: visons
   datasource:
-    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=Visons;encrypt=true;trustServerCertificate=true}
-    username: ${DB_USER:sa}
-    password: ${DB_PASSWORD:Admin12345!}
-    driver-class-name: ${DB_DRIVER:com.microsoft.sqlserver.jdbc.SQLServerDriver}
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER}
   jpa:
     database-platform: org.hibernate.dialect.SQLServerDialect
     hibernate:
       ddl-auto: update
     show-sql: true
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
+    host: ${MAIL_HOST:}
     port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
@@ -25,9 +25,10 @@ spring:
 
 server:
   port: ${PORT:8080}
-  url: ${SERVER_URL:http://localhost:8080}
 
 app:
+  # Store uploaded profile images inside the project's resources so they are
+  # served as static files. Path is relative to the project root.
   upload-dir: src/main/resources/static/uploads/profile-images
   client-login-url: ${CLIENT_LOGIN_URL:http://localhost:4200/login}
   mail:
