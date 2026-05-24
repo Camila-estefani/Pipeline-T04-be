@@ -63,7 +63,7 @@ public class ProductServiceImpl implements ProductService {
             product.setIsOwnProduction(false);
         }
         Product savedProduct = productRepository.save(product);
-        ensureInventory(savedProduct, product.getInitialStockKg());
+        syncInventory(savedProduct, product.getInitialStockKg());
         return withInventory(savedProduct);
     }
 
@@ -96,29 +96,42 @@ public class ProductServiceImpl implements ProductService {
                 product.setIsOwnProduction(productDetails.getIsOwnProduction());
             }
             product.setUpdatedAt(LocalDateTime.now());
-            return withInventory(productRepository.save(product));
+            Product savedProduct = productRepository.save(product);
+            if (productDetails.getInitialStockKg() != null) {
+                syncInventory(savedProduct, productDetails.getInitialStockKg());
+            }
+            return withInventory(savedProduct);
         }
         throw new RuntimeException("Producto no encontrado");
     }
 
-    private void ensureInventory(Product product, BigDecimal initialStockKg) {
+    private void syncInventory(Product product, BigDecimal desiredStockKg) {
         if (product == null || product.getProductId() == null) {
             return;
         }
 
-        BigDecimal normalizedInitialStock = initialStockKg == null ? BigDecimal.ZERO : initialStockKg;
-        if (normalizedInitialStock.compareTo(BigDecimal.ZERO) < 0) {
+        BigDecimal normalizedStock = desiredStockKg == null ? BigDecimal.ZERO : desiredStockKg;
+        if (normalizedStock.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("El stock inicial no puede ser negativo");
         }
 
-        currentInventoryRepository.findReadOnlyByProductId(product.getProductId()).orElseGet(() -> {
-            CurrentInventory inventory = new CurrentInventory();
-            inventory.setProductId(product.getProductId());
-            inventory.setTotalStockKg(normalizedInitialStock);
-            inventory.setReservedStockKg(BigDecimal.ZERO);
-            inventory.setAvailableStockKg(normalizedInitialStock);
-            return currentInventoryRepository.save(inventory);
-        });
+        CurrentInventory inventory = currentInventoryRepository.findByProductId(product.getProductId())
+                .orElseGet(() -> {
+                    CurrentInventory createdInventory = new CurrentInventory();
+                    createdInventory.setProductId(product.getProductId());
+                    createdInventory.setReservedStockKg(BigDecimal.ZERO);
+                    return createdInventory;
+                });
+
+        BigDecimal reservedStock = inventory.getReservedStockKg() == null ? BigDecimal.ZERO : inventory.getReservedStockKg();
+        if (normalizedStock.compareTo(reservedStock) < 0) {
+            throw new RuntimeException("El stock no puede ser menor que el stock reservado");
+        }
+
+        inventory.setTotalStockKg(normalizedStock);
+        inventory.setReservedStockKg(reservedStock);
+        inventory.setAvailableStockKg(normalizedStock.subtract(reservedStock));
+        currentInventoryRepository.saveAndFlush(inventory);
     }
 
     private Product withInventory(Product product) {
@@ -127,10 +140,12 @@ public class ProductServiceImpl implements ProductService {
         }
 
         currentInventoryRepository.findReadOnlyByProductId(product.getProductId()).ifPresentOrElse(inventory -> {
+            product.setInitialStockKg(inventory.getAvailableStockKg());
             product.setTotalStockKg(inventory.getTotalStockKg());
             product.setReservedStockKg(inventory.getReservedStockKg());
             product.setAvailableStockKg(inventory.getAvailableStockKg());
         }, () -> {
+            product.setInitialStockKg(BigDecimal.ZERO);
             product.setTotalStockKg(BigDecimal.ZERO);
             product.setReservedStockKg(BigDecimal.ZERO);
             product.setAvailableStockKg(BigDecimal.ZERO);

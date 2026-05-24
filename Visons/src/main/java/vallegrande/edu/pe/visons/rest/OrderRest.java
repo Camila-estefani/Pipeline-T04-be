@@ -36,6 +36,7 @@ import vallegrande.edu.pe.visons.model.Customer;
 import vallegrande.edu.pe.visons.model.Order;
 import vallegrande.edu.pe.visons.repository.CustomerRepository;
 import vallegrande.edu.pe.visons.repository.OrderRepository;
+import vallegrande.edu.pe.visons.service.InventoryService;
 import vallegrande.edu.pe.visons.service.OrderPdfService;
 import vallegrande.edu.pe.visons.service.UserService;
 
@@ -64,6 +65,9 @@ public class OrderRest {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private InventoryService inventoryService;
+
     @GetMapping
     public List<OrderResponseDTO> getAllOrders() {
         List<Order> orders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
@@ -91,12 +95,14 @@ public class OrderRest {
     }
 
     @PatchMapping("/{id}/accept")
+    @Transactional
     public ResponseEntity<OrderResponseDTO> acceptOrder(@PathVariable Integer id, HttpSession session) {
         Order updated = updateOrderStatus(id, session, STATUS_PROCESSING);
         return ResponseEntity.ok(toResponse(updated));
     }
 
     @PatchMapping("/{id}/reject")
+    @Transactional
     public ResponseEntity<OrderResponseDTO> rejectOrder(@PathVariable Integer id, HttpSession session) {
         Order updated = updateOrderStatus(id, session, STATUS_CANCELLED);
         return ResponseEntity.ok(toResponse(updated));
@@ -134,7 +140,7 @@ public class OrderRest {
             order.setStatus(normalizeStatus(orderDTO.getStatus()));
 
             Order savedOrder = orderRepository.save(order);
-            saveOrderDetails(savedOrder.getOrderId(), orderDTO.getOrderDetails(), consumesInventory(savedOrder.getStatus()));
+            saveOrderDetails(savedOrder.getOrderId(), orderDTO.getOrderDetails(), savedOrder.getStatus());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(savedOrder));
         } catch (Exception e) {
@@ -165,7 +171,9 @@ public class OrderRest {
             }
 
             Order order = orderOpt.get();
-            boolean consumedInventoryBefore = consumesInventory(order.getStatus());
+            if (!STATUS_CANCELLED.equals(normalizeStatus(order.getStatus()))) {
+                restoreOrderStock(order.getOrderId());
+            }
             order.setCustomer(customerOpt.get());
             order.setOrderCode(orderDTO.getOrderCode());
             order.setOrderDate(orderDTO.getOrderDate());
@@ -173,11 +181,7 @@ public class OrderRest {
             order.setStatus(normalizeStatus(orderDTO.getStatus()));
 
             Order savedOrder = orderRepository.save(order);
-            replaceOrderDetails(
-                    savedOrder.getOrderId(),
-                    orderDTO.getOrderDetails(),
-                    consumedInventoryBefore,
-                    consumesInventory(savedOrder.getStatus()));
+            saveOrderDetails(savedOrder.getOrderId(), orderDTO.getOrderDetails(), savedOrder.getStatus());
             return ResponseEntity.ok(toResponse(savedOrder));
         } catch (Exception e) {
             throw e;
@@ -193,7 +197,7 @@ public class OrderRest {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pedido no encontrado");
             }
 
-            if (consumesInventory(orderOpt.get().getStatus())) {
+            if (!STATUS_CANCELLED.equals(normalizeStatus(orderOpt.get().getStatus()))) {
                 restoreOrderStock(id);
             }
             jdbcTemplate.update("DELETE FROM ORDER_DETAILS WHERE order_id = ?", id);
@@ -246,15 +250,17 @@ public class OrderRest {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
-        boolean consumedInventoryBefore = consumesInventory(order.getStatus());
-        boolean consumesInventoryAfter = consumesInventory(newStatus);
-        if (consumedInventoryBefore && !consumesInventoryAfter) {
-            restoreOrderStock(orderId);
-        } else if (!consumedInventoryBefore && consumesInventoryAfter) {
-            consumeOrderStock(orderId);
+        String normalizedCurrentStatus = normalizeStatus(order.getStatus());
+        String normalizedNewStatus = normalizeStatus(newStatus);
+        if (!normalizedCurrentStatus.equals(normalizedNewStatus)) {
+            if (STATUS_PROCESSING.equals(normalizedNewStatus)) {
+                consumeOrderStock(orderId);
+            } else if (STATUS_CANCELLED.equals(normalizedNewStatus)) {
+                restoreOrderStock(orderId);
+            }
         }
 
-        order.setStatus(newStatus);
+        order.setStatus(normalizedNewStatus);
         return orderRepository.save(order);
     }
 
@@ -278,24 +284,27 @@ public class OrderRest {
                 findOrderDetails(order.getOrderId()));
     }
 
-    private void replaceOrderDetails(
-            Integer orderId,
-            List<OrderDetailDTO> details,
-            boolean consumedInventoryBefore,
-            boolean consumesInventoryAfter) {
-        if (consumedInventoryBefore) {
-            restoreOrderStock(orderId);
-        }
-        jdbcTemplate.update("DELETE FROM ORDER_DETAILS WHERE order_id = ?", orderId);
+    private List<OrderDetailDTO> findOrderDetails(Integer orderId) {
+        try {
+            String sql = "SELECT od.product_id, p.name AS product_name, od.quantity_kg, od.unit_price, "
+                    + "(od.quantity_kg * od.unit_price) AS line_total "
+                    + "FROM ORDER_DETAILS od JOIN PRODUCTS p ON od.product_id = p.product_id "
+                    + "WHERE od.order_id = ?";
 
-        if (details == null || details.isEmpty()) {
-            return;
+            return jdbcTemplate.query(sql, new Object[] { orderId }, (rs, rowNum) -> new OrderDetailDTO(
+                    rs.getInt("product_id"),
+                    rs.getString("product_name"),
+                    rs.getBigDecimal("quantity_kg"),
+                    rs.getBigDecimal("unit_price"),
+                    rs.getBigDecimal("line_total")));
+        } catch (DataAccessException ex) {
+            return new ArrayList<>();
         }
-
-        saveOrderDetails(orderId, details, consumesInventoryAfter);
     }
 
-    private void saveOrderDetails(Integer orderId, List<OrderDetailDTO> details, boolean consumeInventory) {
+    private void saveOrderDetails(Integer orderId, List<OrderDetailDTO> details, String status) {
+        jdbcTemplate.update("DELETE FROM ORDER_DETAILS WHERE order_id = ?", orderId);
+
         if (details == null || details.isEmpty()) {
             return;
         }
@@ -316,8 +325,10 @@ public class OrderRest {
             }
 
             String productName = findProductName(detail.getProductId());
-            if (consumeInventory) {
-                decreaseProductStock(detail.getProductId(), productName, quantityKg);
+            if (isPendingStatus(status)) {
+                inventoryService.reserveOrderStock(detail.getProductId(), quantityKg, productName);
+            } else if (isFinalizedStatus(status)) {
+                inventoryService.consumeReservedOrderStock(detail.getProductId(), quantityKg, productName);
             }
 
             jdbcTemplate.update(
@@ -331,13 +342,13 @@ public class OrderRest {
 
     private void consumeOrderStock(Integer orderId) {
         for (InventoryLine detail : findInventoryLinesByOrderId(orderId)) {
-            decreaseProductStock(detail.productId, detail.productName, detail.quantityKg);
+            inventoryService.consumeReservedOrderStock(detail.productId, detail.quantityKg, detail.productName);
         }
     }
 
     private void restoreOrderStock(Integer orderId) {
         for (InventoryLine detail : findInventoryLinesByOrderId(orderId)) {
-            increaseProductStock(detail.productId, detail.quantityKg);
+            inventoryService.releaseOrderStock(detail.productId, detail.quantityKg, detail.productName);
         }
     }
 
@@ -366,72 +377,6 @@ public class OrderRest {
         return names.get(0);
     }
 
-    private void decreaseProductStock(Integer productId, String productName, BigDecimal quantityKg) {
-        int updated = jdbcTemplate.update(
-                "UPDATE CURRENT_INVENTORY "
-                        + "SET total_stock_kg = total_stock_kg - ?, "
-                        + "available_stock_kg = available_stock_kg - ? "
-                        + "WHERE product_id = ? "
-                        + "AND total_stock_kg >= ? "
-                        + "AND available_stock_kg >= ?",
-                quantityKg,
-                quantityKg,
-                productId,
-                quantityKg,
-                quantityKg);
-
-        if (updated > 0) {
-            return;
-        }
-
-        Integer inventoryCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(1) FROM CURRENT_INVENTORY WHERE product_id = ?",
-                Integer.class,
-                productId);
-
-        if (inventoryCount == null || inventoryCount == 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "No existe inventario para el producto " + productName);
-        }
-
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "Stock insuficiente para el producto " + productName);
-    }
-
-    private void increaseProductStock(Integer productId, BigDecimal quantityKg) {
-        int updated = jdbcTemplate.update(
-                "UPDATE CURRENT_INVENTORY "
-                        + "SET total_stock_kg = total_stock_kg + ?, "
-                        + "available_stock_kg = available_stock_kg + ? "
-                        + "WHERE product_id = ?",
-                quantityKg,
-                quantityKg,
-                productId);
-
-        if (updated == 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "No existe inventario para el producto " + productId);
-        }
-    }
-
-    private List<OrderDetailDTO> findOrderDetails(Integer orderId) {
-        try {
-            String sql = "SELECT od.product_id, p.name AS product_name, od.quantity_kg, od.unit_price, "
-                    + "(od.quantity_kg * od.unit_price) AS line_total "
-                    + "FROM ORDER_DETAILS od JOIN PRODUCTS p ON od.product_id = p.product_id "
-                    + "WHERE od.order_id = ?";
-
-            return jdbcTemplate.query(sql, new Object[] { orderId }, (rs, rowNum) -> new OrderDetailDTO(
-                    rs.getInt("product_id"),
-                    rs.getString("product_name"),
-                    rs.getBigDecimal("quantity_kg"),
-                    rs.getBigDecimal("unit_price"),
-                    rs.getBigDecimal("line_total")));
-        } catch (DataAccessException ex) {
-            return new ArrayList<>();
-        }
-    }
-
     private String normalizeStatus(String status) {
         if (status == null || status.isBlank()) {
             return STATUS_PENDING;
@@ -451,8 +396,13 @@ public class OrderRest {
         return role != null && role.equalsIgnoreCase("CLIENT");
     }
 
-    private boolean consumesInventory(String status) {
-        return !STATUS_CANCELLED.equals(normalizeStatus(status));
+    private boolean isPendingStatus(String status) {
+        return STATUS_PENDING.equals(normalizeStatus(status));
+    }
+
+    private boolean isFinalizedStatus(String status) {
+        String normalizedStatus = normalizeStatus(status);
+        return STATUS_PROCESSING.equals(normalizedStatus) || STATUS_COMPLETED.equals(normalizedStatus);
     }
 
     private static final class InventoryLine {

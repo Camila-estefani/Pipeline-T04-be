@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -18,6 +19,7 @@ import vallegrande.edu.pe.visons.dto.ClientRequestTransactionRequest;
 import vallegrande.edu.pe.visons.dto.ClientRequestTransactionResponse;
 import vallegrande.edu.pe.visons.dto.OrderDTO;
 import vallegrande.edu.pe.visons.dto.OrderDetailDTO;
+import vallegrande.edu.pe.visons.dto.OrderResponseDTO;
 import vallegrande.edu.pe.visons.model.Product;
 import vallegrande.edu.pe.visons.rest.OrderRest;
 import vallegrande.edu.pe.visons.service.ClientRequestService;
@@ -55,7 +57,7 @@ class VisonsApplicationTests {
 	}
 
 	@Test
-	void createOrderDecreasesCurrentInventoryStock() {
+	void createOrderReservesCurrentInventoryStock() {
 		Integer clientId = createClient();
 		Integer productId = createProductWithInventory(new BigDecimal("100.000"));
 
@@ -73,13 +75,92 @@ class VisonsApplicationTests {
 				"SELECT total_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
 				BigDecimal.class,
 				productId);
+		BigDecimal reservedStock = jdbcTemplate.queryForObject(
+				"SELECT reserved_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
+				BigDecimal.class,
+				productId);
+		BigDecimal availableStock = jdbcTemplate.queryForObject(
+				"SELECT available_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
+				BigDecimal.class,
+				productId);
+
+		assertThat(totalStock).isEqualByComparingTo("100.000");
+		assertThat(reservedStock).isEqualByComparingTo("12.500");
+		assertThat(availableStock).isEqualByComparingTo("87.500");
+	}
+
+	@Test
+	void acceptOrderConsumesReservedStockAndKeepsAvailableStockConsistent() {
+		Integer workerUserId = createWorkerUser();
+		Integer clientId = createClient();
+		Integer productId = createProductWithInventory(new BigDecimal("100.000"));
+
+		OrderDTO order = new OrderDTO(
+				clientId,
+				"ORD-STOCK-002",
+				LocalDate.now(),
+				"FOB",
+				"Pending",
+				List.of(new OrderDetailDTO(productId, null, new BigDecimal("12.500"), BigDecimal.ZERO, null)));
+
+		OrderResponseDTO createdOrder = (OrderResponseDTO) orderRest.createOrder(order).getBody();
+		MockHttpSession session = authenticatedWorkerSession(workerUserId);
+
+		orderRest.acceptOrder(createdOrder.getOrderId(), session);
+
+		BigDecimal totalStock = jdbcTemplate.queryForObject(
+				"SELECT total_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
+				BigDecimal.class,
+				productId);
+		BigDecimal reservedStock = jdbcTemplate.queryForObject(
+				"SELECT reserved_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
+				BigDecimal.class,
+				productId);
 		BigDecimal availableStock = jdbcTemplate.queryForObject(
 				"SELECT available_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
 				BigDecimal.class,
 				productId);
 
 		assertThat(totalStock).isEqualByComparingTo("87.500");
+		assertThat(reservedStock).isEqualByComparingTo("0.000");
 		assertThat(availableStock).isEqualByComparingTo("87.500");
+	}
+
+	@Test
+	void rejectOrderReleasesReservedStockWithoutChangingTotalStock() {
+		Integer workerUserId = createWorkerUser();
+		Integer clientId = createClient();
+		Integer productId = createProductWithInventory(new BigDecimal("100.000"));
+
+		OrderDTO order = new OrderDTO(
+				clientId,
+				"ORD-STOCK-003",
+				LocalDate.now(),
+				"FOB",
+				"Pending",
+				List.of(new OrderDetailDTO(productId, null, new BigDecimal("12.500"), BigDecimal.ZERO, null)));
+
+		OrderResponseDTO createdOrder = (OrderResponseDTO) orderRest.createOrder(order).getBody();
+		MockHttpSession session = authenticatedWorkerSession(workerUserId);
+
+		orderRest.rejectOrder(createdOrder.getOrderId(), session);
+
+		BigDecimal totalStock = jdbcTemplate.queryForObject(
+				"SELECT total_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
+				BigDecimal.class,
+				productId);
+		BigDecimal reservedStock = jdbcTemplate.queryForObject(
+				"SELECT reserved_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
+				BigDecimal.class,
+				productId);
+		BigDecimal availableStock = jdbcTemplate.queryForObject(
+				"SELECT available_stock_kg FROM CURRENT_INVENTORY WHERE product_id = ?",
+				BigDecimal.class,
+				productId);
+
+		assertThat(totalStock).isEqualByComparingTo("100.000");
+		assertThat(reservedStock).isEqualByComparingTo("0.000");
+		assertThat(availableStock).isEqualByComparingTo("100.000");
 	}
 
 	@Test
@@ -232,5 +313,57 @@ class VisonsApplicationTests {
 		request.setAddress("Av. Grau 150");
 		request.setComments("Solicitud de prueba");
 		return request;
+	}
+
+	private Integer createWorkerUser() {
+		Integer workerId = createWorker();
+		jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS USER_ROLES (user_id INT, role_id INT, PRIMARY KEY (user_id, role_id))");
+		jdbcTemplate.update("INSERT INTO USER_TYPES (name) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM USER_TYPES WHERE name = ?)",
+				"EMPLOYEE",
+				"EMPLOYEE");
+		Integer userTypeId = jdbcTemplate.queryForObject(
+				"SELECT id FROM USER_TYPES WHERE name = ?",
+				Integer.class,
+				"EMPLOYEE");
+		String uniqueSuffix = String.valueOf(System.nanoTime());
+
+		jdbcTemplate.update(
+				"INSERT INTO USERS (username, password_hash, user_type_id, worker_id, client_id, is_active) VALUES (?, ?, ?, ?, ?, ?)",
+				"worker.stock.test." + uniqueSuffix,
+				"hash",
+				userTypeId,
+				workerId,
+				null,
+				true);
+		return jdbcTemplate.queryForObject("SELECT user_id FROM USERS WHERE username = ?", Integer.class,
+				"worker.stock.test." + uniqueSuffix);
+	}
+
+	private Integer createWorker() {
+		Integer ubigeoId = createUbigeo();
+		String uniqueSuffix = String.valueOf(System.nanoTime());
+		String documentNumber = "W" + uniqueSuffix;
+		jdbcTemplate.update(
+				"INSERT INTO WORKERS (first_name, last_name, phone, email, address, ubigeo_id, document_type, document_number, hire_date, status, is_active) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				"Worker",
+				"Test",
+				"999111222",
+				"worker@test.pe",
+				"Av. Trabajo 123",
+				ubigeoId,
+				"DNI",
+				documentNumber,
+				LocalDate.now(),
+				"ACTIVE",
+				true);
+		return jdbcTemplate.queryForObject("SELECT worker_id FROM WORKERS WHERE document_number = ?", Integer.class,
+				documentNumber);
+	}
+
+	private MockHttpSession authenticatedWorkerSession(Integer userId) {
+		MockHttpSession session = new MockHttpSession();
+		session.setAttribute("VISONS_CURRENT_USER_ID", userId);
+		return session;
 	}
 }
