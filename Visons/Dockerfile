@@ -17,8 +17,8 @@ WORKDIR /app
 # Copiamos el .jar generado
 COPY --from=builder /app/target/*.jar app.jar
 
-# Exponemos el puerto (ajústalo si usas otro)
-EXPOSE 8080
+# Exponemos el puerto configurado para Spring Boot
+EXPOSE 9090
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
@@ -36,4 +36,4 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 # 4. Subir tu imagen a DockerHub
 # docker push lizethquispesuarez/springboot-sqlserver:1.0
 
-# 
+#

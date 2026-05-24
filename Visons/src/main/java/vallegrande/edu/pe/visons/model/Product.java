@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -74,4 +75,16 @@ public class Product {
 
     @Column(name = "restored_at")
     private LocalDateTime restoredAt;
+
+    @Transient
+    private BigDecimal initialStockKg;
+
+    @Transient
+    private BigDecimal totalStockKg;
+
+    @Transient
+    private BigDecimal reservedStockKg;
+
+    @Transient
+    private BigDecimal availableStockKg;
 }

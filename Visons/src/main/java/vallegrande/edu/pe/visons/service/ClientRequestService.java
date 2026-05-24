@@ -5,17 +5,18 @@ import java.util.Optional;
 
 import vallegrande.edu.pe.visons.dto.ClientRequestActionRequest;
 import vallegrande.edu.pe.visons.dto.ClientRequestActionResponse;
-import vallegrande.edu.pe.visons.model.ClientRequest;
+import vallegrande.edu.pe.visons.dto.ClientRequestTransactionRequest;
+import vallegrande.edu.pe.visons.dto.ClientRequestTransactionResponse;
 
 public interface ClientRequestService {
 
-    List<ClientRequest> findAll();
+    List<ClientRequestTransactionResponse> findAll();
 
-    List<ClientRequest> findByStatus(String status);
+    List<ClientRequestTransactionResponse> findByStatus(String status);
 
-    Optional<ClientRequest> findById(Integer id);
+    Optional<ClientRequestTransactionResponse> findById(Integer id);
 
-    ClientRequest save(ClientRequest clientRequest);
+    ClientRequestTransactionResponse save(ClientRequestTransactionRequest request);
 
     ClientRequestActionResponse approveRequest(Integer id, ClientRequestActionRequest request);
 

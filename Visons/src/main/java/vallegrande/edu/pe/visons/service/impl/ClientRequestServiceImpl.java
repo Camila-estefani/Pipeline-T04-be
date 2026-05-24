@@ -19,6 +19,8 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import vallegrande.edu.pe.visons.dto.ClientRequestActionRequest;
 import vallegrande.edu.pe.visons.dto.ClientRequestActionResponse;
+import vallegrande.edu.pe.visons.dto.ClientRequestTransactionRequest;
+import vallegrande.edu.pe.visons.dto.ClientRequestTransactionResponse;
 import vallegrande.edu.pe.visons.model.Client;
 import vallegrande.edu.pe.visons.model.ClientRequest;
 import vallegrande.edu.pe.visons.model.Role;
@@ -27,6 +29,7 @@ import vallegrande.edu.pe.visons.model.UserType;
 import vallegrande.edu.pe.visons.repository.ClientRepository;
 import vallegrande.edu.pe.visons.repository.ClientRequestRepository;
 import vallegrande.edu.pe.visons.repository.RoleRepository;
+import vallegrande.edu.pe.visons.repository.UbigeoRepository;
 import vallegrande.edu.pe.visons.repository.UserAccountRepository;
 import vallegrande.edu.pe.visons.repository.UserRoleRepository;
 import vallegrande.edu.pe.visons.repository.UserTypeRepository;
@@ -48,6 +51,7 @@ public class ClientRequestServiceImpl implements ClientRequestService {
     private final UserTypeRepository userTypeRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
+    private final UbigeoRepository ubigeoRepository;
     private final JavaMailSender mailSender;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final String clientLoginUrl;
@@ -59,6 +63,7 @@ public class ClientRequestServiceImpl implements ClientRequestService {
             UserTypeRepository userTypeRepository,
             RoleRepository roleRepository,
             UserRoleRepository userRoleRepository,
+            UbigeoRepository ubigeoRepository,
             ObjectProvider<JavaMailSender> mailSenderProvider,
             Environment environment) {
         this.clientRequestRepository = clientRequestRepository;
@@ -67,37 +72,45 @@ public class ClientRequestServiceImpl implements ClientRequestService {
         this.userTypeRepository = userTypeRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
+        this.ubigeoRepository = ubigeoRepository;
         this.mailSender = mailSenderProvider.getIfAvailable();
         this.clientLoginUrl = environment.getProperty("app.client-login-url", "http://localhost:4200/login");
         this.mailFrom = environment.getProperty("app.mail.from", "no-reply@visons.local");
     }
 
     @Override
-    public List<ClientRequest> findAll() {
-        return clientRequestRepository.findAll(Sort.by(Sort.Direction.DESC, "requestDate"));
+    public List<ClientRequestTransactionResponse> findAll() {
+        return clientRequestRepository.findAll(Sort.by(Sort.Direction.DESC, "requestDate"))
+                .stream()
+                .map(this::toTransactionResponse)
+                .toList();
     }
 
     @Override
-    public List<ClientRequest> findByStatus(String status) {
-        return clientRequestRepository.findByStatusIgnoreCase(normalizeStatus(status));
+    public List<ClientRequestTransactionResponse> findByStatus(String status) {
+        return clientRequestRepository.findByStatusIgnoreCase(normalizeStatus(status))
+                .stream()
+                .map(this::toTransactionResponse)
+                .toList();
     }
 
     @Override
-    public Optional<ClientRequest> findById(Integer id) {
-        return clientRequestRepository.findById(id);
+    public Optional<ClientRequestTransactionResponse> findById(Integer id) {
+        return clientRequestRepository.findById(id)
+                .map(this::toTransactionResponse);
     }
 
     @Override
     @Transactional
-    public ClientRequest save(ClientRequest clientRequest) {
+    public ClientRequestTransactionResponse save(ClientRequestTransactionRequest request) {
+        ClientRequest clientRequest = toEntity(request);
+        validateUbigeo(clientRequest.getUbigeoId());
         ensureUniqueClientRequest(clientRequest);
-        clientRequest.setCountry(requireText(clientRequest.getCountry(), "country"));
         clientRequest.setRequestId(null);
         clientRequest.setStatus(STATUS_PENDING);
         clientRequest.setRequestDate(LocalDateTime.now());
         clientRequest.setReviewedBy(null);
-        clientRequest.setComments(normalizeNullable(clientRequest.getComments()));
-        return clientRequestRepository.save(clientRequest);
+        return toTransactionResponse(clientRequestRepository.save(clientRequest));
     }
 
     @Override
@@ -186,6 +199,58 @@ public class ClientRequestServiceImpl implements ClientRequestService {
             clientRequestRepository.findByEmailIgnoreCase(clientRequest.getEmail().trim())
                     .ifPresent(existing -> { throw new ResponseStatusException(HttpStatus.CONFLICT,
                             "El correo ya fue registrado en una solicitud previa"); });
+        }
+    }
+
+    private ClientRequest toEntity(ClientRequestTransactionRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Client request inválido");
+        }
+
+        ClientRequest clientRequest = new ClientRequest();
+        clientRequest.setUsername(requireText(request.getUsername(), "username"));
+        clientRequest.setFirstName(requireText(request.getFirstName(), "firstName"));
+        clientRequest.setLastName(requireText(request.getLastName(), "lastName"));
+        clientRequest.setCompanyName(normalizeNullable(request.getCompanyName()));
+        clientRequest.setTaxId(normalizeNullable(request.getTaxId()));
+        clientRequest.setCountry(defaultText(request.getCountry(), "Peru"));
+        clientRequest.setEmail(requireText(request.getEmail(), "email"));
+        clientRequest.setPhone(normalizeNullable(request.getPhone()));
+        clientRequest.setAddress(normalizeNullable(request.getAddress()));
+        clientRequest.setUbigeoId(request.getUbigeoId());
+        clientRequest.setComments(normalizeNullable(request.getComments()));
+        return clientRequest;
+    }
+
+    private ClientRequestTransactionResponse toTransactionResponse(ClientRequest clientRequest) {
+        ClientRequestTransactionResponse response = new ClientRequestTransactionResponse();
+        response.setRequestId(clientRequest.getRequestId());
+        response.setTransactionCode(buildTransactionCode(clientRequest.getRequestId()));
+        response.setUsername(clientRequest.getUsername());
+        response.setFirstName(clientRequest.getFirstName());
+        response.setLastName(clientRequest.getLastName());
+        response.setFullName(buildFullName(clientRequest.getFirstName(), clientRequest.getLastName()));
+        response.setCompanyName(clientRequest.getCompanyName());
+        response.setTaxId(clientRequest.getTaxId());
+        response.setCountry(clientRequest.getCountry());
+        response.setEmail(clientRequest.getEmail());
+        response.setPhone(clientRequest.getPhone());
+        response.setAddress(clientRequest.getAddress());
+        response.setUbigeoId(clientRequest.getUbigeoId());
+        response.setStatus(clientRequest.getStatus());
+        response.setRequestDate(clientRequest.getRequestDate());
+        response.setReviewedBy(clientRequest.getReviewedBy());
+        response.setComments(clientRequest.getComments());
+        return response;
+    }
+
+    private void validateUbigeo(Integer ubigeoId) {
+        if (ubigeoId == null) {
+            return;
+        }
+
+        if (!ubigeoRepository.existsByUbigeoIdAndIsActiveTrue(ubigeoId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ubigeoId no existe o esta inactivo");
         }
     }
 
@@ -312,6 +377,19 @@ public class ClientRequestServiceImpl implements ClientRequestService {
         }
         String trimmed = value.trim();
         return trimmed.isBlank() ? null : trimmed;
+    }
+
+    private String defaultText(String value, String fallback) {
+        String normalized = normalizeNullable(value);
+        return normalized == null ? fallback : normalized;
+    }
+
+    private String buildTransactionCode(Integer requestId) {
+        return requestId == null ? null : "CR-%06d".formatted(requestId);
+    }
+
+    private String buildFullName(String firstName, String lastName) {
+        return (defaultText(firstName, "") + " " + defaultText(lastName, "")).trim();
     }
 
     private String requireText(String value, String fieldName) {

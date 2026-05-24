@@ -2,13 +2,13 @@ IF DB_ID(N'Visons') IS NULL
 BEGIN
     EXEC(N'CREATE DATABASE [Visons]');
 END;
-GO
+
 
 USE Visons;
-GO
+
 
 SET NOCOUNT ON;
-GO
+
 
 -- =========================================
 -- DROP TABLES (orden inverso por claves foraneas)
@@ -31,7 +31,7 @@ DROP TABLE IF EXISTS CLIENTS;
 DROP TABLE IF EXISTS PROVIDERS;
 DROP TABLE IF EXISTS PRODUCTS;
 DROP TABLE IF EXISTS CATEGORIES;
-GO
+
 
 -- =========================================
 -- CREATE TABLES
@@ -278,7 +278,7 @@ CREATE TABLE AUDIT_LOG (
     CONSTRAINT FK_AUDIT_LOG_USERS
         FOREIGN KEY (user_id) REFERENCES USERS(user_id)
 );
-GO
+
 
 -- =========================================
 -- INDICES
@@ -295,7 +295,7 @@ CREATE INDEX idx_orders_date ON ORDERS(order_date DESC);
 CREATE INDEX idx_order_details_order ON ORDER_DETAILS(order_id);
 CREATE INDEX idx_order_details_product ON ORDER_DETAILS(product_id);
 CREATE INDEX idx_client_requests_status_date ON CLIENT_REQUESTS(status, request_date DESC);
-GO
+
 
 -- =========================================
 -- SEEDS: CATALOGOS BASE
@@ -311,7 +311,7 @@ VALUES
 (N'ADMIN', N'Administrador del sistema'),
 (N'EMPLOYEE', N'Trabajador operativo'),
 (N'CLIENT', N'Cliente de la plataforma');
-GO
+
 
 -- =========================================
 -- SEEDS: UBIGEO
@@ -328,7 +328,7 @@ VALUES
 ('130101', N'La Libertad', N'Trujillo', N'Trujillo'),
 ('200101', N'Piura', N'Piura', N'Piura'),
 ('210101', N'Puno', N'Puno', N'Puno');
-GO
+
 
 -- =========================================
 -- SEEDS: WORKERS Y USERS
@@ -346,7 +346,7 @@ VALUES
 (N'Lucia',  N'Flores',  N'999111118', N'lucia@empresa.com',  N'Trujillo',  (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '130101'), N'DNI', N'70000008', GETDATE(), N'ACTIVE', 1, GETDATE()),
 (N'Diego',  N'Mendoza', N'999111119', N'diego@empresa.com',  N'Piura',     (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '200101'), N'DNI', N'70000009', GETDATE(), N'ACTIVE', 1, GETDATE()),
 (N'Sofia',  N'Reyes',   N'999111120', N'sofia@empresa.com',  N'Puno',      (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '210101'), N'DNI', N'70000010', GETDATE(), N'ACTIVE', 1, GETDATE());
-GO
+
 
 -- =========================================
 -- SEEDS: CLIENTS
@@ -363,7 +363,7 @@ VALUES
 (N'Organic World B.V.',       N'20608901234', N'Paises Bajos',   N'956123463', N'Amstelplein 1, Amsterdam',     N'hello@organicworld.nl',     NULL, 30000.00, 1, GETDATE()),
 (N'Andes Natural Export SAC', N'20609012345', N'Peru',           N'956123464', N'Av. Ejercito 301, Arequipa',   N'info@andesnatural.pe',      NULL, 18000.00, 1, GETDATE()),
 (N'Green Globe Trading Co.',  N'20610123456', N'Canada',         N'956123465', N'1200 West Georgia, Vancouver', N'trade@greenglobe.ca',       NULL, 55000.00, 1, GETDATE());
-GO
+
 
 DECLARE @ClientId INT = (SELECT client_id FROM CLIENTS WHERE tax_id = N'20601234567');
 
@@ -380,7 +380,7 @@ VALUES
 (N'diego@empresa.com',     N'70000009',    (SELECT id FROM USER_TYPES WHERE name = N'WORKER'), 9,  NULL,      1, GETDATE()),
 (N'sofia@empresa.com',     N'70000010',    (SELECT id FROM USER_TYPES WHERE name = N'WORKER'), 10, NULL,      1, GETDATE()),
 (N'cliente@agroexport.pe', N'20601234567', (SELECT id FROM USER_TYPES WHERE name = N'CLIENT'), NULL, @ClientId, 1, GETDATE());
-GO
+
 
 INSERT INTO USER_ROLES (user_id, role_id)
 VALUES
@@ -395,7 +395,7 @@ VALUES
 ((SELECT user_id FROM USERS WHERE username = N'diego@empresa.com'),     (SELECT role_id FROM ROLES WHERE name = N'EMPLOYEE')),
 ((SELECT user_id FROM USERS WHERE username = N'sofia@empresa.com'),     (SELECT role_id FROM ROLES WHERE name = N'EMPLOYEE')),
 ((SELECT user_id FROM USERS WHERE username = N'cliente@agroexport.pe'), (SELECT role_id FROM ROLES WHERE name = N'CLIENT'));
-GO
+
 
 -- =========================================
 -- SEEDS: CLIENT_REQUESTS
@@ -405,7 +405,7 @@ VALUES
 (N'solicitud.norte', N'Valeria', N'Campos', N'Agro Norte SAC',      N'20700123456', N'Peru', N'valeria@agronorte.pe', N'987111222', N'Av. Grau 150, Piura',     (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '200101'), N'Pending',  GETDATE(), NULL, NULL),
 (N'solicitud.sur',   N'Mateo',   N'Rojas',  N'Export Sur Andino',  N'20700123457', N'Peru', N'mateo@exportsur.pe',   N'987111223', N'Av. Ejercito 400, Cusco', (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '080101'), N'Approved', GETDATE(), 1,    N'Aprobado para pruebas'),
 (N'solicitud.lima',  N'Camila',  N'Vega',   N'Comercial Lima SAC', N'20700123458', N'Peru', N'camila@comlima.pe',    N'987111224', N'Av. Larco 900, Lima',     (SELECT ubigeo_id FROM UBIGEO WHERE ubigeo_code = '150103'), N'Rejected', GETDATE(), 1,    N'Documentacion incompleta');
-GO
+
 
 -- =========================================
 -- SEEDS: CATEGORIES, PROVIDERS, PRODUCTS
@@ -448,7 +448,7 @@ VALUES
 (5, N'Naranja',  N'Valencia',  N'Grande',  N'KG', 13.00, 1, 1, GETDATE()),
 (2, N'Espinaca', N'Baby',      N'Pequeno', N'KG',  4.00, 0, 1, GETDATE()),
 (8, N'Fresa',    N'Premium',   N'Mediano', N'KG',  6.50, 1, 1, GETDATE());
-GO
+
 
 -- =========================================
 -- SEEDS: COMPRAS E INVENTARIO
@@ -504,7 +504,7 @@ VALUES
 (8,  1000.000, 400.000, 600.000),
 (9,   450.000, 120.000, 330.000),
 (10,  350.000,  90.000, 260.000);
-GO
+
 
 -- =========================================
 -- SEEDS: PEDIDOS Y DETALLES PARA MODULO PDF
@@ -525,7 +525,6 @@ VALUES
 (3, 3, 3, 250.000, 4.3000),
 (3, 7, 7,  90.000, 8.7500),
 (4, 5, 5,  60.000, 5.4000);
-GO
 
 -- =========================================
 -- SEED: AUDITORIA
@@ -533,7 +532,7 @@ GO
 INSERT INTO AUDIT_LOG (user_id, action, table_name, record_id, details)
 VALUES
 ((SELECT user_id FROM USERS WHERE username = N'luis@empresa.com'), N'INIT_DB', N'ALL', NULL, N'Carga inicial del script completo.sql');
-GO
+
 
 -- =========================================
 -- CONSULTAS DE VERIFICACION
@@ -544,4 +543,4 @@ SELECT COUNT(*) AS total_users FROM USERS;
 SELECT COUNT(*) AS total_orders FROM ORDERS;
 SELECT COUNT(*) AS total_order_details FROM ORDER_DETAILS;
 SELECT COUNT(*) AS total_purchase_details FROM PURCHASE_DETAILS;
-GO
+

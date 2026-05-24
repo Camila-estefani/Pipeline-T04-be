@@ -99,7 +99,7 @@ public class UserServiceImpl implements UserService {
         userAccount.setActive(request.getActive() == null ? Boolean.TRUE : request.getActive());
         userAccount.setCreatedAt(LocalDateTime.now());
 
-        if ("WORKER".equals(normalizedType)) {
+        if (isWorkerBackedType(normalizedType)) {
             Worker worker = saveWorker(request.getWorker());
             userAccount.setWorkerId(worker.getWorkerId());
             userAccount.setClientId(null);
@@ -150,7 +150,7 @@ public class UserServiceImpl implements UserService {
             UserType userType = getOrCreateUserType(normalizedType);
             existing.setUserTypeId(userType.getId());
 
-            if ("WORKER".equals(normalizedType)) {
+            if (isWorkerBackedType(normalizedType)) {
                 Worker worker = updateOrCreateWorker(existing.getWorkerId(), request.getWorker());
                 existing.setWorkerId(worker.getWorkerId());
                 existing.setClientId(null);
@@ -421,6 +421,10 @@ public class UserServiceImpl implements UserService {
             userType.setName(typeName);
             return userTypeRepository.save(userType);
         });
+    }
+
+    private boolean isWorkerBackedType(String typeName) {
+        return "WORKER".equals(typeName) || "ADMIN".equals(typeName);
     }
 
     private Worker saveWorker(WorkerForm workerForm) {

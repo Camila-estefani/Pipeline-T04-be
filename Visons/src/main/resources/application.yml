@@ -24,7 +24,7 @@ spring:
             enable: ${MAIL_SMTP_STARTTLS:false}
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:9090}
 
 app:
   # Store uploaded profile images inside the project's resources so they are

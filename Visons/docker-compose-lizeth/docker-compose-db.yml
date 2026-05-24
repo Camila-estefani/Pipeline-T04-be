@@ -1,5 +1,5 @@
-# docker-compose -f docker-compose-db.yml up -d
-# docker-compose -f docker-compose-db.yml down
+# docker compose -f docker-compose-db.yml up -d
+# docker compose -f docker-compose-db.yml down
 
 version: '3.8'
 
@@ -12,7 +12,7 @@ services:
       SA_PASSWORD: "Admin12345!"
       MSSQL_PID: "Express"
     ports:
-      - "1433:1433"
+      - "1438:1433"
     volumes:
       - mssql_data:/var/opt/mssql
     networks:

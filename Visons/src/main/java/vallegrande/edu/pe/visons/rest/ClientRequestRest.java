@@ -17,7 +17,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import vallegrande.edu.pe.visons.dto.ClientRequestActionRequest;
 import vallegrande.edu.pe.visons.dto.ClientRequestActionResponse;
-import vallegrande.edu.pe.visons.model.ClientRequest;
+import vallegrande.edu.pe.visons.dto.ClientRequestTransactionRequest;
+import vallegrande.edu.pe.visons.dto.ClientRequestTransactionResponse;
 import vallegrande.edu.pe.visons.service.ClientRequestService;
 
 @RestController
@@ -34,19 +35,19 @@ public class ClientRequestRest {
 
     @GetMapping({"", "/"})
     @Operation(summary = "Get All Client Requests", description = "Get All Client Requests")
-    public List<ClientRequest> findAll() {
+    public List<ClientRequestTransactionResponse> findAll() {
         return clientRequestService.findAll();
     }
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Get Client Requests By Status", description = "Get Client Requests By Status (Pending, Approved, Rejected)")
-    public List<ClientRequest> findByStatus(@PathVariable String status) {
+    public List<ClientRequestTransactionResponse> findByStatus(@PathVariable String status) {
         return clientRequestService.findByStatus(status);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get Client Request By ID", description = "Get Client Request By ID")
-    public Optional<ClientRequest> findById(@PathVariable Integer id) {
+    public Optional<ClientRequestTransactionResponse> findById(@PathVariable Integer id) {
         return clientRequestService.findById(id);
     }
 
@@ -66,7 +67,7 @@ public class ClientRequestRest {
 
     @PostMapping("/save")
     @Operation(summary = "Submit Client Request (POST)", description = "Submit a new client registration request from the landing page")
-    public ClientRequest save(@Valid @RequestBody ClientRequest clientRequest) {
-        return clientRequestService.save(clientRequest);
+    public ClientRequestTransactionResponse save(@Valid @RequestBody ClientRequestTransactionRequest request) {
+        return clientRequestService.save(request);
     }
 }

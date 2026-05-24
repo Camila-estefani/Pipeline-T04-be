@@ -87,11 +87,12 @@ public class ProviderRest {
         }
 
         return providers.stream().map(provider -> {
+            List<String> providerMainProducts = mainProducts.getOrDefault(provider.getProviderId(), new ArrayList<>());
             ProviderSummaryDTO dto = new ProviderSummaryDTO();
             dto.setProviderId(provider.getProviderId());
             dto.setCompanyName(provider.getCompanyName());
             dto.setTaxId(provider.getTaxId());
-            dto.setProductType(provider.getProductType());
+            dto.setProductType(providerMainProducts.isEmpty() ? provider.getProductType() : String.join(", ", providerMainProducts));
             dto.setContactEmail(provider.getContactEmail());
             dto.setContactPhone(provider.getContactPhone());
             dto.setAddress(provider.getAddress());
@@ -102,7 +103,7 @@ public class ProviderRest {
             dto.setTotalVolumeKg(totalVolumeKg.getOrDefault(provider.getProviderId(), 0D));
             dto.setTotalAmount(totalAmount.getOrDefault(provider.getProviderId(), 0D));
             dto.setLastPurchaseDate(lastPurchaseDate.get(provider.getProviderId()));
-            dto.setMainProducts(mainProducts.getOrDefault(provider.getProviderId(), new ArrayList<>()));
+            dto.setMainProducts(providerMainProducts);
             return dto;
         }).collect(Collectors.toList());
     }

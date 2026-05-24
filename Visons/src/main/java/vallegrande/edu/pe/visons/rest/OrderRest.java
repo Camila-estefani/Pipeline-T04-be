@@ -134,7 +134,7 @@ public class OrderRest {
             order.setStatus(normalizeStatus(orderDTO.getStatus()));
 
             Order savedOrder = orderRepository.save(order);
-            saveOrderDetails(savedOrder.getOrderId(), orderDTO.getOrderDetails());
+            saveOrderDetails(savedOrder.getOrderId(), orderDTO.getOrderDetails(), consumesInventory(savedOrder.getStatus()));
 
             return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(savedOrder));
         } catch (Exception e) {
@@ -165,6 +165,7 @@ public class OrderRest {
             }
 
             Order order = orderOpt.get();
+            boolean consumedInventoryBefore = consumesInventory(order.getStatus());
             order.setCustomer(customerOpt.get());
             order.setOrderCode(orderDTO.getOrderCode());
             order.setOrderDate(orderDTO.getOrderDate());
@@ -172,7 +173,11 @@ public class OrderRest {
             order.setStatus(normalizeStatus(orderDTO.getStatus()));
 
             Order savedOrder = orderRepository.save(order);
-            replaceOrderDetails(savedOrder.getOrderId(), orderDTO.getOrderDetails());
+            replaceOrderDetails(
+                    savedOrder.getOrderId(),
+                    orderDTO.getOrderDetails(),
+                    consumedInventoryBefore,
+                    consumesInventory(savedOrder.getStatus()));
             return ResponseEntity.ok(toResponse(savedOrder));
         } catch (Exception e) {
             throw e;
@@ -188,6 +193,9 @@ public class OrderRest {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pedido no encontrado");
             }
 
+            if (consumesInventory(orderOpt.get().getStatus())) {
+                restoreOrderStock(id);
+            }
             jdbcTemplate.update("DELETE FROM ORDER_DETAILS WHERE order_id = ?", id);
             orderRepository.deleteById(id);
             return ResponseEntity.noContent().build();
@@ -238,6 +246,14 @@ public class OrderRest {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
+        boolean consumedInventoryBefore = consumesInventory(order.getStatus());
+        boolean consumesInventoryAfter = consumesInventory(newStatus);
+        if (consumedInventoryBefore && !consumesInventoryAfter) {
+            restoreOrderStock(orderId);
+        } else if (!consumedInventoryBefore && consumesInventoryAfter) {
+            consumeOrderStock(orderId);
+        }
+
         order.setStatus(newStatus);
         return orderRepository.save(order);
     }
@@ -262,16 +278,24 @@ public class OrderRest {
                 findOrderDetails(order.getOrderId()));
     }
 
-    private void replaceOrderDetails(Integer orderId, List<OrderDetailDTO> details) {
+    private void replaceOrderDetails(
+            Integer orderId,
+            List<OrderDetailDTO> details,
+            boolean consumedInventoryBefore,
+            boolean consumesInventoryAfter) {
+        if (consumedInventoryBefore) {
+            restoreOrderStock(orderId);
+        }
+        jdbcTemplate.update("DELETE FROM ORDER_DETAILS WHERE order_id = ?", orderId);
+
         if (details == null || details.isEmpty()) {
             return;
         }
 
-        jdbcTemplate.update("DELETE FROM ORDER_DETAILS WHERE order_id = ?", orderId);
-        saveOrderDetails(orderId, details);
+        saveOrderDetails(orderId, details, consumesInventoryAfter);
     }
 
-    private void saveOrderDetails(Integer orderId, List<OrderDetailDTO> details) {
+    private void saveOrderDetails(Integer orderId, List<OrderDetailDTO> details, boolean consumeInventory) {
         if (details == null || details.isEmpty()) {
             return;
         }
@@ -291,14 +315,9 @@ public class OrderRest {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unitPrice debe ser mayor o igual a 0");
             }
 
-            Integer productCount = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(1) FROM PRODUCTS WHERE product_id = ?",
-                    Integer.class,
-                    detail.getProductId());
-
-            if (productCount == null || productCount == 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Producto con ID " + detail.getProductId() + " no existe");
+            String productName = findProductName(detail.getProductId());
+            if (consumeInventory) {
+                decreaseProductStock(detail.getProductId(), productName, quantityKg);
             }
 
             jdbcTemplate.update(
@@ -307,6 +326,91 @@ public class OrderRest {
                     detail.getProductId(),
                     quantityKg,
                     unitPrice);
+        }
+    }
+
+    private void consumeOrderStock(Integer orderId) {
+        for (InventoryLine detail : findInventoryLinesByOrderId(orderId)) {
+            decreaseProductStock(detail.productId, detail.productName, detail.quantityKg);
+        }
+    }
+
+    private void restoreOrderStock(Integer orderId) {
+        for (InventoryLine detail : findInventoryLinesByOrderId(orderId)) {
+            increaseProductStock(detail.productId, detail.quantityKg);
+        }
+    }
+
+    private List<InventoryLine> findInventoryLinesByOrderId(Integer orderId) {
+        String sql = "SELECT od.product_id, p.name AS product_name, od.quantity_kg "
+                + "FROM ORDER_DETAILS od JOIN PRODUCTS p ON od.product_id = p.product_id "
+                + "WHERE od.order_id = ?";
+
+        return jdbcTemplate.query(sql, new Object[] { orderId }, (rs, rowNum) -> new InventoryLine(
+                rs.getInt("product_id"),
+                rs.getString("product_name"),
+                rs.getBigDecimal("quantity_kg")));
+    }
+
+    private String findProductName(Integer productId) {
+        List<String> names = jdbcTemplate.query(
+                "SELECT name FROM PRODUCTS WHERE product_id = ?",
+                new Object[] { productId },
+                (rs, rowNum) -> rs.getString("name"));
+
+        if (names.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Producto con ID " + productId + " no existe");
+        }
+
+        return names.get(0);
+    }
+
+    private void decreaseProductStock(Integer productId, String productName, BigDecimal quantityKg) {
+        int updated = jdbcTemplate.update(
+                "UPDATE CURRENT_INVENTORY "
+                        + "SET total_stock_kg = total_stock_kg - ?, "
+                        + "available_stock_kg = available_stock_kg - ? "
+                        + "WHERE product_id = ? "
+                        + "AND total_stock_kg >= ? "
+                        + "AND available_stock_kg >= ?",
+                quantityKg,
+                quantityKg,
+                productId,
+                quantityKg,
+                quantityKg);
+
+        if (updated > 0) {
+            return;
+        }
+
+        Integer inventoryCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM CURRENT_INVENTORY WHERE product_id = ?",
+                Integer.class,
+                productId);
+
+        if (inventoryCount == null || inventoryCount == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No existe inventario para el producto " + productName);
+        }
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Stock insuficiente para el producto " + productName);
+    }
+
+    private void increaseProductStock(Integer productId, BigDecimal quantityKg) {
+        int updated = jdbcTemplate.update(
+                "UPDATE CURRENT_INVENTORY "
+                        + "SET total_stock_kg = total_stock_kg + ?, "
+                        + "available_stock_kg = available_stock_kg + ? "
+                        + "WHERE product_id = ?",
+                quantityKg,
+                quantityKg,
+                productId);
+
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No existe inventario para el producto " + productId);
         }
     }
 
@@ -345,5 +449,21 @@ public class OrderRest {
     private boolean isClient(UserResponse user) {
         String role = user == null ? null : user.getUserTypeName();
         return role != null && role.equalsIgnoreCase("CLIENT");
+    }
+
+    private boolean consumesInventory(String status) {
+        return !STATUS_CANCELLED.equals(normalizeStatus(status));
+    }
+
+    private static final class InventoryLine {
+        private final Integer productId;
+        private final String productName;
+        private final BigDecimal quantityKg;
+
+        private InventoryLine(Integer productId, String productName, BigDecimal quantityKg) {
+            this.productId = productId;
+            this.productName = productName;
+            this.quantityKg = quantityKg;
+        }
     }
 }
