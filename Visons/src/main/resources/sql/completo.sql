@@ -2,9 +2,10 @@ IF DB_ID(N'Visons') IS NULL
 BEGIN
     EXEC(N'CREATE DATABASE [Visons]');
 END;
-
+GO
 
 USE Visons;
+GO
 
 
 SET NOCOUNT ON;
@@ -160,9 +161,12 @@ CREATE TABLE PURCHASES (
     purchase_id INT IDENTITY(1,1) PRIMARY KEY,
     provider_id INT NOT NULL,
     order_code NVARCHAR(50) NULL UNIQUE,
-    total_amount DECIMAL(18,2) NULL,
+    total_amount DECIMAL(18,4) NULL,
     status NVARCHAR(50) NULL,
     purchase_date DATE NOT NULL DEFAULT GETDATE(),
+    notes NVARCHAR(500) NULL,
+    created_at DATETIME NULL DEFAULT GETDATE(),
+    updated_at DATETIME NULL,
     CONSTRAINT FK_PURCHASES_PROVIDERS
         FOREIGN KEY (provider_id) REFERENCES PROVIDERS(provider_id)
 );
@@ -453,18 +457,18 @@ VALUES
 -- =========================================
 -- SEEDS: COMPRAS E INVENTARIO
 -- =========================================
-INSERT INTO PURCHASES (provider_id, order_code, total_amount, status, purchase_date)
+INSERT INTO PURCHASES (provider_id, order_code, total_amount, status, purchase_date, notes, created_at)
 VALUES
-(1,  N'PUR-001', 2500.00, N'COMPLETED', GETDATE()),
-(2,  N'PUR-002', 1800.50, N'COMPLETED', GETDATE()),
-(3,  N'PUR-003', 3200.75, N'PENDING',   GETDATE()),
-(4,  N'PUR-004', 4100.20, N'COMPLETED', GETDATE()),
-(5,  N'PUR-005',  950.00, N'PENDING',   GETDATE()),
-(6,  N'PUR-006', 2750.40, N'COMPLETED', GETDATE()),
-(7,  N'PUR-007', 3890.00, N'COMPLETED', GETDATE()),
-(8,  N'PUR-008', 1450.90, N'PENDING',   GETDATE()),
-(9,  N'PUR-009', 5200.00, N'COMPLETED', GETDATE()),
-(10, N'PUR-010', 1999.99, N'COMPLETED', GETDATE());
+(1,  N'PUR-001', 2500.0000, N'Completed', GETDATE(), N'Compra inicial de mangos',    GETDATE()),
+(2,  N'PUR-002', 1800.5000, N'Completed', GETDATE(), N'Compra de paltas Hass',       GETDATE()),
+(3,  N'PUR-003', 3200.7500, N'Completed', GETDATE(), N'Compra de limones Tahiti',    GETDATE()),
+(4,  N'PUR-004', 4100.2000, N'Completed', GETDATE(), N'Compra de papayas',           GETDATE()),
+(5,  N'PUR-005',  950.0000, N'Completed', GETDATE(), N'Compra de pinas Golden',      GETDATE()),
+(6,  N'PUR-006', 2750.4000, N'Completed', GETDATE(), N'Compra de uvas Red Globe',    GETDATE()),
+(7,  N'PUR-007', 3890.0000, N'Completed', GETDATE(), N'Compra de arandanos',         GETDATE()),
+(8,  N'PUR-008', 1450.9000, N'Completed', GETDATE(), N'Compra de naranjas Valencia', GETDATE()),
+(9,  N'PUR-009', 5200.0000, N'Completed', GETDATE(), N'Compra de espinaca baby',     GETDATE()),
+(10, N'PUR-010', 1999.9900, N'Completed', GETDATE(), N'Compra de fresas premium',    GETDATE());
 
 INSERT INTO PURCHASE_DETAILS (purchase_id, product_id, quantity_kg, unit_price)
 VALUES
@@ -544,3 +548,47 @@ SELECT COUNT(*) AS total_orders FROM ORDERS;
 SELECT COUNT(*) AS total_order_details FROM ORDER_DETAILS;
 SELECT COUNT(*) AS total_purchase_details FROM PURCHASE_DETAILS;
 
+
+-- =========================================
+-- CONSULTAS DE VERIFICACION - TRANSACCION COMPRAS (MODULO PROVEEDOR)
+-- =========================================
+
+-- Ver todas las ordenes de compra con nombre del proveedor
+SELECT
+    p.purchase_id,
+    pv.company_name AS proveedor,
+    pv.tax_id       AS ruc,
+    p.order_code    AS codigo_compra,
+    p.purchase_date AS fecha_compra,
+    p.status        AS estado,
+    p.total_amount  AS total,
+    p.notes         AS notas,
+    p.created_at    AS fecha_registro
+FROM PURCHASES p
+JOIN PROVIDERS pv ON pv.provider_id = p.provider_id
+ORDER BY p.purchase_id DESC;
+
+-- Ver el detalle de cada orden de compra con nombre del producto
+SELECT
+    pd.detail_id,
+    pd.purchase_id,
+    p.order_code    AS codigo_compra,
+    pr.name         AS producto,
+    pd.quantity_kg  AS cantidad_kg,
+    pd.unit_price   AS precio_unitario,
+    (pd.quantity_kg * pd.unit_price) AS subtotal_linea
+FROM PURCHASE_DETAILS pd
+JOIN PURCHASES p  ON p.purchase_id  = pd.purchase_id
+JOIN PRODUCTS  pr ON pr.product_id  = pd.product_id
+ORDER BY pd.purchase_id DESC, pd.detail_id ASC;
+
+-- Ver el inventario actual (para confirmar que el stock subio tras una compra)
+SELECT
+    ci.inventory_id,
+    pr.name              AS producto,
+    ci.total_stock_kg    AS stock_total_kg,
+    ci.reserved_stock_kg AS stock_reservado_kg,
+    ci.available_stock_kg AS stock_disponible_kg
+FROM CURRENT_INVENTORY ci
+JOIN PRODUCTS pr ON pr.product_id = ci.product_id
+ORDER BY ci.inventory_id ASC;
