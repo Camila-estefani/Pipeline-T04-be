@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -41,6 +42,12 @@ public class ProductRest {
     @Operation(summary = "Get Product By STATE (A/1/true for active)", description = "Get Product By STATE")
     public List<Product> findByState(@PathVariable String state) {
         return productService.findByState(state);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Search Products By Name", description = "Search Products By Name")
+    public List<Product> findByName(@RequestParam String name) {
+        return productService.findByName(name);
     }
 
     @GetMapping("/{id}")

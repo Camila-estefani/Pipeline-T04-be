@@ -11,6 +11,8 @@ public interface ProductService {
 
     List<Product> findByState(String state);
 
+    List<Product> findByName(String name);
+
     Optional<Product> findById(Integer id);
 
     Product save(Product product);

@@ -41,6 +41,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<Product> findByName(String name) {
+        if (name == null || name.isBlank()) {
+            return findAll();
+        }
+
+        String normalizedName = name.trim();
+        return productRepository.findByNameContainingIgnoreCase(normalizedName).stream().map(this::withInventory).toList();
+    }
+
+    @Override
     public Optional<Product> findById(Integer id) {
         return productRepository.findById(id).map(this::withInventory);
     }
