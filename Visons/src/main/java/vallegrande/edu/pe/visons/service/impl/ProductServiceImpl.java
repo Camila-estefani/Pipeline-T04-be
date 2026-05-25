@@ -110,7 +110,11 @@ public class ProductServiceImpl implements ProductService {
             return;
         }
 
-        BigDecimal normalizedStock = desiredStockKg == null ? BigDecimal.ZERO : desiredStockKg;
+        if (desiredStockKg == null) {
+            throw new RuntimeException("El stock inicial es requerido");
+        }
+
+        BigDecimal normalizedStock = desiredStockKg;
         if (normalizedStock.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("El stock inicial no puede ser negativo");
         }

@@ -2,13 +2,14 @@ IF DB_ID(N'Visons') IS NULL
 BEGIN
     EXEC(N'CREATE DATABASE [Visons]');
 END;
-GO
+
 
 USE Visons;
 GO
 
 
 SET NOCOUNT ON;
+GO
 
 
 -- =========================================
