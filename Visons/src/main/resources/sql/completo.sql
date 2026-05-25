@@ -601,7 +601,7 @@ JOIN PURCHASES p  ON p.purchase_id  = pd.purchase_id
 JOIN PRODUCTS  pr ON pr.product_id  = pd.product_id
 ORDER BY pd.purchase_id DESC, pd.detail_id ASC;
 
--- Ver el inventario actual (para confirmar que el stock subio tras una compra)
+-- Ver inventario actual (para confirmar que el stock subio tras una compra)
 SELECT
     ci.inventory_id,
     pr.name              AS producto,
