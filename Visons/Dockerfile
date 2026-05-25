@@ -17,6 +17,8 @@ WORKDIR /app
 # Copiamos el .jar generado
 COPY --from=builder /app/target/*.jar app.jar
 
+ENV PORT=8080
+
 # Exponemos el puerto configurado para Spring Boot
 EXPOSE 8080
 

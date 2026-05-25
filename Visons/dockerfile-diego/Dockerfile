@@ -12,4 +12,6 @@ FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 RUN apk add --no-cache curl
 COPY --from=builder /app/target/*.jar app.jar
+ENV PORT=8080
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

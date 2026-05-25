@@ -15,6 +15,7 @@ services:
       DB_USER: "sa"
       DB_PASSWORD: "Admin12345!"
       DB_DRIVER: "com.microsoft.sqlserver.jdbc.SQLServerDriver"   # ← faltaba esto
+      SPRING_PROFILES_ACTIVE: "sqlserver"
       PORT: "8080"
       SERVER_URL: "http://localhost:8080"
       MAIL_HOST: "smtp.gmail.com"
