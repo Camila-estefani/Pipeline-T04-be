@@ -64,4 +64,13 @@ public class PurchaseRest {
     public ResponseEntity<List<PurchaseResponseDTO>> findByProvider(@PathVariable Integer providerId) {
         return ResponseEntity.ok(purchaseService.findByProviderId(providerId));
     }
+
+    @GetMapping("/{id}")
+    @Operation(
+        summary = "Buscar orden de compra por ID",
+        description = "Retorna una orden de compra específica con su detalle completo."
+    )
+    public ResponseEntity<PurchaseResponseDTO> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(purchaseService.findById(id));
+    }
 }

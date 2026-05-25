@@ -177,6 +177,13 @@ public class PurchaseServiceImpl implements PurchaseService {
         return result;
     }
 
+    @Override
+    public PurchaseResponseDTO findById(Integer id) {
+        Purchase purchase = purchaseRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Orden de compra con ID " + id + " no existe"));
+        return toResponse(purchase);
+    }
     // ─── helpers ────────────────────────────────────────────────────────────────
 
     private PurchaseResponseDTO toResponse(Purchase purchase) {

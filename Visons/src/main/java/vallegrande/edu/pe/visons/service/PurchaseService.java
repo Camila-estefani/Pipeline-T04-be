@@ -12,4 +12,6 @@ public interface PurchaseService {
     List<PurchaseResponseDTO> findAll();
 
     List<PurchaseResponseDTO> findByProviderId(Integer providerId);
+
+    PurchaseResponseDTO findById(Integer id);
 }
