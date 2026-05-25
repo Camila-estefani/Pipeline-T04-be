@@ -84,7 +84,23 @@ CREATE TABLE PROVIDERS (
     updated_by NVARCHAR(100) NULL,
     updated_at DATETIME NULL,
     deleted_at DATETIME NULL,
-    restored_at DATETIME NULL
+    restored_at DATETIME NULL,
+
+    -- CHECK: telefono debe tener minimo 7 caracteres si se ingresa
+    CONSTRAINT CK_PROVIDERS_PHONE
+        CHECK (contact_phone IS NULL OR LEN(contact_phone) >= 7),
+
+    -- CHECK: is_active solo permite 0 o 1
+    CONSTRAINT CK_PROVIDERS_IS_ACTIVE
+        CHECK (is_active IN (0, 1)),
+
+    -- CHECK: tax_id debe tener minimo 8 digitos si se ingresa
+    CONSTRAINT CK_PROVIDERS_TAX_ID
+        CHECK (tax_id IS NULL OR LEN(tax_id) >= 8),
+
+    -- CHECK: company_name no puede ser solo espacios en blanco
+    CONSTRAINT CK_PROVIDERS_COMPANY_NAME
+        CHECK (LEN(LTRIM(RTRIM(company_name))) >= 3)
 );
 
 CREATE TABLE CLIENTS (
