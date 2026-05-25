@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Data;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -77,6 +78,9 @@ public class Product {
     private LocalDateTime restoredAt;
 
     @Transient
+    @NotNull(message = "initialStockKg es requerido")
+    @DecimalMin(value = "0.0", message = "initialStockKg debe ser mayor o igual a 0")
+    @Digits(integer = 10, fraction = 3, message = "initialStockKg tiene un formato inválido")
     private BigDecimal initialStockKg;
 
     @Transient
