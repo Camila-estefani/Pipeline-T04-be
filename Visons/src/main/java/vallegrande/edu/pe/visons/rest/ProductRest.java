@@ -64,7 +64,7 @@ public class ProductRest {
 
     @PutMapping("/update/{id}")
     @Operation(summary = "Editar (PUT) - (fecha-hora)", description = "Update Product")
-    public Product update(@PathVariable Integer id, @Valid @RequestBody Product product) {
+    public Product update(@PathVariable Integer id, @RequestBody Product product) {
         return productService.update(id, product);
     }
     @PatchMapping("/{id}")

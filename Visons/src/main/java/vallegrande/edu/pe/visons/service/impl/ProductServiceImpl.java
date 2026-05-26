@@ -83,7 +83,23 @@ public class ProductServiceImpl implements ProductService {
         Optional<Product> existingProduct = productRepository.findById(id);
         if (existingProduct.isPresent()) {
             Product product = existingProduct.get();
-            ensureUniqueProduct(id, productDetails);
+            BigDecimal desiredStockKg = productDetails.getInitialStockKg() != null
+                ? productDetails.getInitialStockKg()
+                : product.getInitialStockKg();
+            if (desiredStockKg != null) {
+                product.setInitialStockKg(desiredStockKg);
+            }
+            Integer targetCategoryId = productDetails.getCategoryId() != null
+                    ? productDetails.getCategoryId()
+                    : product.getCategoryId();
+            String targetName = productDetails.getName() != null
+                    ? productDetails.getName()
+                    : product.getName();
+
+            Product uniquenessProbe = new Product();
+            uniquenessProbe.setCategoryId(targetCategoryId);
+            uniquenessProbe.setName(targetName);
+            ensureUniqueProduct(id, uniquenessProbe);
             if (productDetails.getCategoryId() != null) {
                 product.setCategoryId(productDetails.getCategoryId());
             }
@@ -105,10 +121,19 @@ public class ProductServiceImpl implements ProductService {
             if (productDetails.getIsOwnProduction() != null) {
                 product.setIsOwnProduction(productDetails.getIsOwnProduction());
             }
+            if (productDetails.getIsActive() != null) {
+                product.setIsActive(productDetails.getIsActive());
+                if (Boolean.TRUE.equals(productDetails.getIsActive())) {
+                    product.setRestoredAt(LocalDateTime.now());
+                    product.setDeletedAt(null);
+                } else {
+                    product.setDeletedAt(LocalDateTime.now());
+                }
+            }
             product.setUpdatedAt(LocalDateTime.now());
             Product savedProduct = productRepository.save(product);
-            if (productDetails.getInitialStockKg() != null) {
-                syncInventory(savedProduct, productDetails.getInitialStockKg());
+            if (desiredStockKg != null) {
+                syncInventory(savedProduct, desiredStockKg);
             }
             return withInventory(savedProduct);
         }
@@ -154,7 +179,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         currentInventoryRepository.findReadOnlyByProductId(product.getProductId()).ifPresentOrElse(inventory -> {
-            product.setInitialStockKg(inventory.getAvailableStockKg());
+            product.setInitialStockKg(inventory.getTotalStockKg());
             product.setTotalStockKg(inventory.getTotalStockKg());
             product.setReservedStockKg(inventory.getReservedStockKg());
             product.setAvailableStockKg(inventory.getAvailableStockKg());
@@ -178,24 +203,29 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public Product delete(Integer id) {
         Optional<Product> existingProduct = productRepository.findById(id);
         if (existingProduct.isPresent()) {
             Product product = existingProduct.get();
             product.setIsActive(false);
             product.setDeletedAt(LocalDateTime.now());
+            product.setUpdatedAt(LocalDateTime.now());
             return withInventory(productRepository.save(product));
         }
         throw new RuntimeException("Producto no encontrado");
     }
 
     @Override
+    @Transactional
     public Product restore(Integer id) {
         Optional<Product> existingProduct = productRepository.findById(id);
         if (existingProduct.isPresent()) {
             Product product = existingProduct.get();
             product.setIsActive(true);
             product.setRestoredAt(LocalDateTime.now());
+            product.setDeletedAt(null);
+            product.setUpdatedAt(LocalDateTime.now());
             return withInventory(productRepository.save(product));
         }
         throw new RuntimeException("Producto no encontrado");
