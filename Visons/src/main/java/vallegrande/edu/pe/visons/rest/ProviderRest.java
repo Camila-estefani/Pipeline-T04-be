@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,7 +24,10 @@ import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import vallegrande.edu.pe.visons.dto.ProviderSummaryDTO;
+import vallegrande.edu.pe.visons.dto.PurchaseRequestDTO;
+import vallegrande.edu.pe.visons.dto.PurchaseResponseDTO;
 import vallegrande.edu.pe.visons.model.Provider;
+import vallegrande.edu.pe.visons.service.PurchaseService;
 import vallegrande.edu.pe.visons.service.ProviderService;
 
 @RestController
@@ -31,13 +36,15 @@ import vallegrande.edu.pe.visons.service.ProviderService;
 public class ProviderRest {
 
     private final ProviderService providerService;
+    private final PurchaseService purchaseService;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public ProviderRest(ProviderService providerService) {
+    public ProviderRest(ProviderService providerService, PurchaseService purchaseService) {
         this.providerService = providerService;
+        this.purchaseService = purchaseService;
     }
 
     @GetMapping({"", "/"})
@@ -118,6 +125,30 @@ public class ProviderRest {
     @Operation(summary = "Get Provider By ID", description = "Get Provider By ID")
     public Optional<Provider> findById(@PathVariable Integer id) {
         return providerService.findById(id);
+    }
+
+    @GetMapping("/{providerId}/purchases")
+    @Operation(
+        summary = "Listar compras del proveedor",
+        description = "Retorna todas las órdenes de compra registradas para un proveedor específico, con cabecera y detalle."
+    )
+    public List<PurchaseResponseDTO> findPurchasesByProvider(@PathVariable Integer providerId) {
+        return purchaseService.findByProviderId(providerId);
+    }
+
+    @PostMapping("/{providerId}/purchases")
+    @Operation(
+        summary = "Registrar compra para proveedor",
+        description = "Crea una orden de compra con su detalle para el proveedor indicado en una sola acción transaccional."
+    )
+    public ResponseEntity<PurchaseResponseDTO> registerPurchaseForProvider(
+            @PathVariable Integer providerId,
+            @Valid @RequestBody PurchaseRequestDTO request) {
+        if (request.getProviderId() == null || !request.getProviderId().equals(providerId)) {
+            request.setProviderId(providerId);
+        }
+        PurchaseResponseDTO response = purchaseService.registerPurchase(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/save")
