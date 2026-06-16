@@ -31,6 +31,7 @@ jobs:
           cache: maven
 
       - name: Build Project
+        working-directory: Visons
         run: mvn clean package -DskipTests
 
       - name: Run Trivy Filesystem Scan
