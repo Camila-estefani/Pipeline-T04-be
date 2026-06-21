@@ -34,8 +34,8 @@ jobs:
       - name: Build and Push Docker Image to Docker Hub
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Visons/Dockerfile
+          context: Visons
+          file: Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME_CAMILA }}/pipeline-t04-be:latest
