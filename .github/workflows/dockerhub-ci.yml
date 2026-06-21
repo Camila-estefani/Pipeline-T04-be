@@ -1,4 +1,4 @@
-name: ci: Imagen Docker pipeline-t04-be
+name: Docker Hub
 
 on:
   push:
@@ -34,8 +34,8 @@ jobs:
       - name: Build and Push Docker Image to Docker Hub
         uses: docker/build-push-action@v4
         with:
-          context: Visons
-          file: Visons/Dockerfile
+          context: .
+          file: ./Visons/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME_CAMILA }}/pipeline-t04-be:latest
