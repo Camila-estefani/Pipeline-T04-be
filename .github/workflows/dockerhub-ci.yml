@@ -35,7 +35,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: Visons
-          file: Dockerfile
+          file: Visons/dockerfile-camila/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME_CAMILA }}/pipeline-t04-be:latest
